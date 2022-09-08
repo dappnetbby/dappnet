@@ -98,7 +98,11 @@ function start(opts = {
         // const gatewayRewrite = `https://cloudflare-ipfs.com/ipfs/${cid}/${req.path}` // cloudflare gateway
         // const gatewayRewrite = `http://localhost:8080/ipfs/${cid}${req.path}`
 
-        if (codec == 'ipfs-ns') {
+        if (host == 'uniswap.eth') {
+            // STUPID UNISWAP SPECIAL CASE BECAUSE IDK WHY IT WORKED YESTERDAY.
+            gatewayRewrite = `https://${host}.limo${req.path}` // .eth.limo
+
+        } else if (codec == 'ipfs-ns') {
             gatewayRewrite = `${ipfsGateway}/ipfs/${hash}${req.path}`
         } else if(codec == 'ipns-ns') {
             gatewayRewrite = `${ipfsGateway}/ipns/${hash}${req.path}`

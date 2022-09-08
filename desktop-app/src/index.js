@@ -11,13 +11,22 @@ serve({
     directory: __dirname + '/../ui/out/'
 });
 
-const { autoUpdater } = require("electron-updater")
-
+// const { autoUpdater } = require("electron-updater")
+const argsParser = require('simple-args-parser')
 
 const createWindow = () => {
     setupMainProcessIPC()
 
-    autoUpdater.checkForUpdatesAndNotify()
+    // autoUpdater.checkForUpdatesAndNotify()
+
+    console.log(process.argv)
+    const args = argsParser.parse(process.argv, {
+        long: ['ipfs-node:'],
+        errOnDisallowed: false
+    }, (err) => {
+        console.log(err)
+    })
+    console.log(args)
 
     const mainWindow = new BrowserWindow({
         width: 800,
@@ -40,8 +49,8 @@ const createWindow = () => {
         // Launch .eth proxy server.
         // let ensServer = require('../../local-gateway/src/index').start()
         const gatewayOpts = {}
-        if(isDev) {
-            gatewayOpts.ipfsNode = "http://localhost:8080"
+        if (args['ipfs-node']) {
+            gatewayOpts.ipfsNode = args['ipfs-node']
         }
         let ensServer = require('@dappnet/local-gateway').start(gatewayOpts)
 
@@ -58,8 +67,6 @@ const createWindow = () => {
         log('')
         log('ENS server running')
         log('SOCKS server running')
-
-        // await loadURL(mainWindow);
 
         if (isDev) {
             await mainWindow.loadURL('http://localhost:3000')

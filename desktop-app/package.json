@@ -4,7 +4,7 @@
   "description": "__",
   "main": "src/index.js",
   "scripts": {
-    "start": "electron-forge start",
+    "start": "electron-forge start --",
     "package": "electron-forge package",
     "build": "electron-forge make",
     "pack": "electron-builder -c.compression=store -c.mac.identity=null",
@@ -31,7 +31,8 @@
     "electron-serve": "^1.1.0",
     "electron-squirrel-startup": "^1.0.0",
     "electron-updater": "^5.2.1",
-    "shelljs": "^0.8.5"
+    "shelljs": "^0.8.5",
+    "simple-args-parser": "^1.0.1"
   },
   "_id": "desktop-app@1.0.0",
   "config": {
