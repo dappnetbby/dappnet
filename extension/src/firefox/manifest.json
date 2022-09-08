@@ -1,0 +1,42 @@
+{
+	"manifest_version": 2,
+	"name": "DAPPNET",
+	"short_name": "freedom",
+	"version": "0.1.1",
+	"description" : "XXX",
+	"homepage_url": "https://freedom.eth",
+	"icons": {
+		"128": "../../icon-128.png"
+	},
+	"background": {
+		"scripts": [
+			"index.js"
+		],
+		"persistent": true
+	},
+	"page_action": {
+		"browser_style": false,
+		"show_matches": ["http://*.eth/"],
+		"default_icon": "../../icon-128.png",
+		"default_title": "dappnet"
+	},
+	"browser_action": {
+		"browser_style": true,
+		"default_icon": "../../icon-128.png",
+		"default_title": "dappnet",
+		"default_popup": "popup.html"
+	},
+	"browser_specific_settings": {
+		"gecko": {
+			"id": "addon@dappnet.eth",
+			"strict_min_version": "91.1.0"
+		}
+	},
+	"permissions": [
+		"proxy",
+		"webRequest", 
+		"webRequestBlocking",
+		"<all_urls>",
+		"*://*/*"
+	]
+}

@@ -1,0 +1,17 @@
+{
+  "name": "@dappnet/local-socks5-proxy",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SOCKS v4/v4a/v5 server implementation in node.js ===============================",
+  "main": "./proxy.js",
+  "scripts": {
+    "start": "node start.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sequoiar/socks5/issues"
+  },
+  "homepage": "https://github.com/sequoiar/socks5#readme"
+}

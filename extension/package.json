@@ -1,0 +1,45 @@
+{
+  "name": "@dappnet/extension",
+  "version": "1.0.0",
+  "description": "",
+  "source": "src/index.js",
+  "scripts": {
+    "build:chrome": "rm -rf dist/chrome/ && parcel build src/chrome/manifest.json --dist-dir dist/chrome/",
+    "build:firefox": "rm -rf dist/firefox/ && parcel build src/firefox/manifest.json --dist-dir dist/firefox/",
+    "watch:chrome": "parcel watch src/chrome/manifest.json --dist-dir dist/chrome/",
+    "watch:firefox": "parcel watch src/firefox/manifest.json --dist-dir dist/firefox/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tagide/chrome-bit-domain-extension.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Tagide/chrome-bit-domain-extension/issues"
+  },
+  "homepage": "https://github.com/Tagide/chrome-bit-domain-extension#readme",
+  "dependencies": {
+    "@popperjs/core": "^2.11.6",
+    "bootstrap": "^5.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@parcel/transformer-sass": "^2.7.0",
+    "@parcel/config-webextension": "^2.7.0",
+    "debug": "^4.3.4",
+    "assert": "^2.0.0",
+    "events": "^3.3.0",
+    "https-browserify": "^1.0.0",
+    "parcel": "^2.7.0",
+    "process": "^0.11.10",
+    "querystring-es3": "^0.2.1",
+    "stream-browserify": "^3.0.0",
+    "stream-http": "^3.2.0",
+    "url": "^0.11.0",
+    "util": "^0.12.4",
+    "web-ext": "^7.2.0"
+  }
+}

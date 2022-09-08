@@ -1,0 +1,18 @@
+@import "~bootstrap/scss/bootstrap";
+
+body {
+    font-family: sans-serif;
+}
+
+// https://stackoverflow.com/questions/27899635/how-to-make-border-radius-in-popup-chrome-extension
+body {
+    background: none
+}
+
+.toast {
+    border: 0;
+}
+
+#app {
+    width: 250px;
+}
