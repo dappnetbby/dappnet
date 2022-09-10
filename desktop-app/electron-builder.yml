@@ -1,11 +1,16 @@
 appId: eth.dapp
-copyright: The Internet.
+copyright: Liam Zebedee 2022.
 productName: Dappnet
 
 # asar: false
 compression: store
 asarUnpack:
  - node_modules/@dappnet/local-gateway/
+
+publish:
+  provider: github
+  owner: gliss-co
+  repo: dappnet
 
 directories:
   buildResources: dist-assets/
@@ -33,6 +38,15 @@ mac:
       arch:
        - x64
        - arm64
+  
+  # Verify code signing.
+  gatekeeperAssess: true
+  
+  # Edit Info.plist.
+  # Source: https://github.com/electron/electron/blob/main/shell/browser/resources/mac/Info.plist
+  # extendInfo:
+
+  # binaries Array<String> | “undefined” - Paths of any extra binaries that need to be signed.
   category: public.app-category.tools
 
 win:

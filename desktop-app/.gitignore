@@ -3,3 +3,4 @@ out
 dist
 vendor/ipfs/**
 !vendor/ipfs/.gitkeep
+.env

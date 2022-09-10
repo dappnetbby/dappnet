@@ -17,8 +17,13 @@ const argsParser = require('simple-args-parser')
 const createWindow = () => {
     setupMainProcessIPC()
 
-    // autoUpdater.checkForUpdatesAndNotify()
+    app.setLoginItemSettings({
+        openAtLogin: true,
+        openAsHidden: true, // macOS-only.
+        // TODO: we need to add additional settings for auto-update on windows.
+    })
 
+    // TODO: this doesn't work when the args are missing.
     console.log(process.argv)
     const args = argsParser.parse(process.argv, {
         long: ['ipfs-node:'],
@@ -38,7 +43,7 @@ const createWindow = () => {
         }
     });
 
-    // Open all URL's (.eth apps) in the system's web browser.
+    // Open URL's (.eth apps) in the system's web browser.
     mainWindow.webContents.on('will-navigate', function (e, url) {
         console.log(url)
         e.preventDefault();
