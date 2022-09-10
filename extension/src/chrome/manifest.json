@@ -1,9 +1,8 @@
 {
 	"manifest_version": 2,
-	"name": "DAPPNET",
-	"short_name": "freedom",
+	"name": "Dappnet",
 	"version": "0.1.0",
-	"description" : "XXX",
+	"description" : "Access .eth dapps that can't be taken down.",
 	"homepage_url": "https://freedom.eth",
 	"icons": {
 		"128": "../../icon-128.png"
@@ -23,6 +22,6 @@
 		"proxy", 
 		"webRequest", 
 		"webRequestBlocking", 
-		"*://*/*" 
+		"*://*/*"
 	]
 }

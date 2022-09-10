@@ -1,10 +1,9 @@
 {
 	"manifest_version": 2,
-	"name": "DAPPNET",
-	"short_name": "freedom",
-	"version": "0.1.1",
-	"description" : "XXX",
-	"homepage_url": "https://freedom.eth",
+	"name": "Dappnet",
+	"version": "0.1.4",
+	"description" : "Access .eth dapps that can't be taken down.",
+	"homepage_url": "https://github.com/gliss-so/dappnet",
 	"icons": {
 		"128": "../../icon-128.png"
 	},
