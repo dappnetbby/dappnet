@@ -13,7 +13,9 @@ const streamPipeline = promisify(pipeline);
 
 const {
     testENS,
-    resolveENS
+    resolveENS,
+    getDNSEndpoints,
+    resolveDNSLink
 } = require('./ens')
 
 const { 
@@ -34,21 +36,140 @@ function timeoutAfter(seconds) {
     });
 }
 
+// Autogenerate a certificate for any .eth domain, as a part of the Server Name Identification (SNI) callback in the TLS protocol.
+const sniCallback = (serverName, callback) => {
+    // console.log('sni', serverName)
 
+    var tld = serverName.slice(-3);
+    if (tld != 'eth') {
+        return;
+    }
+
+    try {
+        // const { key, cert } = generateCertificateOpenSSL(serverName)
+        const { key, cert } = generateCertificate(serverName)
+
+        // fs.writeFileSync(__dirname + `/../dev-certificates/certs/test.${serverName}.crt`, cert, 'utf8')
+
+        const ctx = new tls.createSecureContext({
+            key,
+            cert,
+        })
+
+        callback(null, ctx);
+    } catch (err) {
+        console.error(err)
+        callback(new Error("couldn't dynamically create cert for domain - " + serverName))
+    }
+}
 
 function start(opts = {
     ipfsNode: null
 }) {
     testENS()
     const app = express();
+    getDNSEndpoints()
+    // resolveENS('uniswap.eth')
 
-    const proxyToGateway = async (host, gatewayUrl, res) => {
-        console.log(host, gatewayUrl)
+    let ipfsGateways = [
+        // 'https://cloudflare-ipfs.com',
+        'https://ipfs.fleek.co',
+        'https://ipfs.io'
+        // 'https://ipfs.eth.limo'
+    ]
+
+    let ensGateways = [
+        (name) => `https://${name}.eth.limo`
+    ]
+
+    if(opts.ipfsNode) {
+        ipfsGateways = [opts.ipfsNode, ...ipfsGateways]
+    }
+
+    // The local gateway receives requests on /*.
+    // For example, a request to uniswap.eth/favicon.ico.
+    // This is transmitted as a HTTP request in the form:
+    // ```
+    // GET /favicon.ico
+    // Host: uniswap.eth
+    // ```
+    app.get('/*', async (req, res, next) => {
+        res.setHeader('X-Special-Proxy-Header', 'foobar');
+
+        const host = req.hostname
+        if (!host || !host.length) return
+
+        // For testing purposes.
+        if (host == 'localhost') {
+            res.write("localhost says hello!")
+            res.end()
+            return
+        }
+
+        // Resolve ENS to content hash.
+        try {
+            console.time(req.path)
+            req.ensData = await resolveENS(host);
+            console.timeEnd(req.path)
+        } catch(err) {
+            return next(err)
+        }
+
+        const { codec, hash, dnsLinkName } = req.ensData
+        console.log(host, codec, hash, dnsLinkName)
+
+        let handler = {
+            'ipfs-ns': getIpfs,
+            'ipns-ns': getIpns,
+        }
+        
+        if (!handler[codec]) {
+            return next(new Error(`Dappnet cannot resolve ENS content type - multihash codec "${codec}"`))
+        }
+
+        handler[codec](req, res, next)
+    });
+
+    async function getIpfs(req, res, next) {
+        const cid = req.ensData.hash
+        const gatewayRewrite = `${ipfsGateways[0]}/ipfs/${cid}${req.path || '/'}`
+
+        try {
+            await proxyToGateway(req, gatewayRewrite, res)
+            return
+        } catch (err) {
+            return next(err)
+        }
+    }
+
+    async function getIpns(req, res, next) {
+        let gatewayRewrite
+
+        // Resolve the IPNS hash.
+        const { dnsLinkName } = req.ensData
+        if (dnsLinkName) {
+            const cid = await resolveDNSLink(dnsLinkName)
+            gatewayRewrite = `${ipfsGateways[0]}/ipfs/${cid}${req.path || '/'}`
+        } else {
+            const cid = req.ensData.hash
+            gatewayRewrite = `${ipfsGateways[0]}/ipfs/${cid}${req.path || '/'}`
+        }
+
+        try {
+            await proxyToGateway(req, gatewayRewrite, res)
+            return
+        } catch (err) {
+            return next(err)
+        }
+    }
+
+    const proxyToGateway = async (req, gatewayUrl, res) => {
+        console.log(req.hostname, gatewayUrl)
         let gatewayRes = await fetch(gatewayUrl)
 
         await streamPipeline(gatewayRes.body, res);
         // res.send(gatewayRes.body)
-        
+
         res.header = gatewayRes.headers.raw()
         res.end()
     }
@@ -65,85 +186,6 @@ function start(opts = {
         console.error(err.stack)
         res.status(500).send('Something broke!')
     })
-
-    // The core of the IPFS gateway.
-    let ipfsGateway
-    if (opts.ipfsNode) {
-        ipfsGateway = opts.ipfsNode
-    } else {
-        ipfsGateway = "https://ipfs.fleek.co"
-    }
-
-    app.get('/*', async (req, res, next) => {
-        res.setHeader('X-Special-Proxy-Header', 'foobar');
-
-        const host = req.hostname
-        if (!host || !host.length) return
-        if (host == 'localhost') {
-            res.write("localhost says hello!")
-            res.end()
-            return
-        }
-
-        let codec, hash
-        try {
-            ({ codec, hash } = await resolveENS(host));
-        } catch(err) {
-            return next(err)
-        }
-
-        let gatewayRewrite
-        console.log(host, codec, hash)
-        // gatewayRewrite = `https://cloudflare-ipfs.com/ipfs/${cid}/${req.path}` // cloudflare gateway
-        // const gatewayRewrite = `https://cloudflare-ipfs.com/ipfs/${cid}/${req.path}` // cloudflare gateway
-        // const gatewayRewrite = `http://localhost:8080/ipfs/${cid}${req.path}`
-
-        if (host == 'uniswap.eth') {
-            // STUPID UNISWAP SPECIAL CASE BECAUSE IDK WHY IT WORKED YESTERDAY.
-            gatewayRewrite = `https://${host}.limo${req.path}` // .eth.limo
-
-        } else if (codec == 'ipfs-ns') {
-            gatewayRewrite = `${ipfsGateway}/ipfs/${hash}${req.path}`
-        } else if(codec == 'ipns-ns') {
-            gatewayRewrite = `${ipfsGateway}/ipns/${hash}${req.path}`
-        } else {
-            gatewayRewrite = `https://${host}.limo${req.path}` // .eth.limo
-        }
-
-        try {
-            await proxyToGateway(host, gatewayRewrite, res)
-            return
-        } catch (err) {
-            return next(err)
-        }
-    });
-
-    // Autogenerate a certificate for any .eth domain, as a part of the Server Name Identification (SNI) callback in the TLS protocol.
-    const sniCallback = (serverName, callback) => {
-        console.log('sni', serverName)
-
-        var tld = serverName.slice(-3);
-        if (tld != 'eth') {
-            return;
-        }
-
-        try {
-            // const { key, cert } = generateCertificateOpenSSL(serverName)
-            const { key, cert } = generateCertificate(serverName)
-
-            // fs.writeFileSync(__dirname + `/../dev-certificates/certs/test.${serverName}.crt`, cert, 'utf8')
-
-            const ctx = new tls.createSecureContext({
-                key,
-                cert,
-            })
-
-            callback(null, ctx);
-        } catch(err) {
-            console.error(err)
-            callback(new Error("couldn't dynamically create cert for domain - " + serverName))
-        }
-    }
 
     const httpsServer = require('https').Server({
         key: fs.readFileSync(__dirname + '/../certs/kwenta.eth.key', 'utf8'),
