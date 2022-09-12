@@ -21,13 +21,18 @@ async function getContentHash(argv) {
     console.time('getContentHash')
     const { name } = argv
     const data = await resolveENS(name)
-    const { codec, hash, dnsLinkName } = data
+    const { codec, hash, contentHashHex, dnsLinkName } = data
     if(codec == null || hash == null) {
         console.log(`null`)
         return
     }
     let hashDecoded = bs58.decode(hash)
-    console.log(`codec: ${codec}\nhash: ${hash}\nhash (hex): ${Buffer.from(hashDecoded).toString('hex')}\ndnsLinkName: ${dnsLinkName}`)
+    console.log(`contentHash: ${contentHashHex.slice(2)}`)
+    console.log(`codec: ${codec}`)
+    console.log(`hash: ${hash}`)
+    console.log(`hash (hex): ${Buffer.from(hashDecoded).toString('hex')}`)
+    console.log(`hash (raw str): ${JSON.stringify(Buffer.from(hashDecoded).toString())}`)
+    console.log(`dnsLinkName: ${dnsLinkName}`)
 
     if (dnsLinkName) {
         let dnsLinkRes = await resolveDNSLink(dnsLinkName, {

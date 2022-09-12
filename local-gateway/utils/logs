@@ -1,0 +1,107 @@
+(base) ➜  local-gateway git:(master) ✗ node ./utils/ens.js contenthash ens.eth
+provider.getResolver: 349.975ms
+resolver._fetchBytes: 1.364s
+dnsLink m�ζ��k�.�[�k�3ͫ�*lx
+�D
+contentHash: e5010172002408011220146dac15ceb6bb897f6be6af2eb25bc76ba033cdabfe2a156c780d0a0813e944
+codec: ipns-ns
+hash: 12D3KooWBC7KN4WoiFPYXhd22wFa2daSTkkTAeDcEDQfxBDHY3tP
+hash (hex): 002408011220146dac15ceb6bb897f6be6af2eb25bc76ba033cdabfe2a156c780d0a0813e944
+hash (raw str): "\u0000$\b\u0001\u0012 \u0014m�\u0015ζ��k�.�[�k�3ͫ�*\u0015lx\r\n\b\u0013�D"
+dnsLinkName: m�ζ��k�.�[�k�3ͫ�*lx
+
+
+
+(base) ➜  local-gateway git:(master) ✗ node ./utils/ens.js contenthash uniswap.eth
+provider.getResolver: 1.002s
+resolver._fetchBytes: 1.218s
+dnsLink app.uniswap.org
+contentHash: e5010170000f6170702e756e69737761702e6f7267
+codec: ipns-ns
+hash: 12uA8M8Ku8mHUumxHcu7uee
+hash (hex): 000f6170702e756e69737761702e6f7267
+hash (raw str): "\u0000\u000fapp.uniswap.org"
+dnsLinkName: app.uniswap.org
+dnsLink entries:
+- QmYGXf55a3x38tu2frPHvViG7H6NwYZKBWf2uM9XGsH6DW (ttl=300)
+getContentHash: 3.141s
+
+
+
+provider.getResolver: 372.799ms
+resolver._fetchBytes: 1.298s
+contentHash: e301017012204df0bd8a80c0322b82d0427d549973d1973c9adf3b549e3c69d6e0cee557be27
+codec: ipfs-ns
+hash: QmTau1nKy3axaPKU866BWkf8CfaiKrMYWXC5sVUVpJRSgW
+hash (hex): 12204df0bd8a80c0322b82d0427d549973d1973c9adf3b549e3c69d6e0cee557be27
+hash (raw str): "\u0012 M𽊀�2+��B}T�sї<��;T�<i����W�'"
+dnsLinkName: undefined
+getContentHash: 1.677s
+
+
+multicodec
+    <codec id> <>
+multibase
+multihash
+    <fn code> <length> <hash digest>
+
+
+
+Coding lookup. 
+source: https://github.com/multiformats/multicodec/blob/master/table.csv
+
+[namespace]
+e3 - ipfs
+e5 - ipns
+
+[cid]
+01 - cidv1
+
+[multihash]
+12 - sha2-256
+
+[ipld]
+70 - dag-pb -  MerkleDAG protobuf
+72 - libp2p-key - Libp2p Public Key
+
+
+
+
+
+[ipns prefix] [len] [cid pefix] []
+
+<cidv1> ::= <multibase-prefix><multicodec-cidv1><multicodec-content-type><multihash-content-address>
+
+
+ens.eth
+    e5 01 01 72 00 24 08011220146dac15ceb6bb897f6be6af2eb25bc76ba033cdabfe2a156c780d0a0813e944
+
+    e5 = ipns
+    01 = cidv1
+    01 = [length]
+    72 = libp2p-key
+    00 = identity function
+    24 = [length]
+
+kwenta.eth
+    e3 01 01 70 12 20 4df0bd8a80c0322b82d0427d549973d1973c9adf3b549e3c69d6e0cee557be27
+    e5 = ipfs
+    01 = cidv1
+    01 = [length]
+    70 = dag-pb
+    12 = sha2-256
+    20 = [length]
+
+uniswap.eth
+    e5 01 01 70 00 0f 6170702e756e69737761702e6f7267
+
+    e5 = ipns
+    01 = cidv1
+    01 = [length]
+    70 = dag-pb
+    00 = identity function
+    0f = [length]
+
+    ipns cidv1 libp2p-key identity hash
+    ipns cidv1 dab-pb sha2-256 hash
+    ipns cidv1 dag-pb identity dnslink_domain

@@ -1,0 +1,1 @@
+./ipfs daemon --stream-channels --enable-namesys-pubsub --enable-gc --manage-fdlimit

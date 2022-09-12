@@ -1,0 +1,9 @@
+# ENS -> IPFS CID.
+curl --header "Host: kwenta.eth" http://localhost:10422
+# ENS -> IPNS -> IPFS CID.
+curl --header "Host: ens.eth" http://localhost:10422
+# ENS -> DNSLink -> IPNS -> IPFS CID.
+curl --header "Host: uniswap.eth" http://localhost:10422
+
+# Raw query of node.
+curl --head http://localhost:8080/ipns/12D3KooWBC7KN4WoiFPYXhd22wFa2daSTkkTAeDcEDQfxBDHY3tP/

@@ -10,18 +10,22 @@ const { createWriteStream } = require('node:fs')
 const { pipeline } = require('node:stream')
 const { promisify } = require('node:util')
 const streamPipeline = promisify(pipeline);
+const { CID } = require('multiformats/cid')
+
 
 const {
     testENS,
     resolveENS,
     getDNSEndpoints,
-    resolveDNSLink
+    resolveDNSLink,
+    resolveIPNS
 } = require('./ens')
 
 const { 
     generateCertificate,
     generateCertificateOpenSSL
-} = require('./certificates')
+} = require('./certificates');
+const { clearScreenDown } = require('readline');
 
 const PROXY_PORT = 10422
 const PROXY_PORT_HTTPS = 10423
@@ -64,6 +68,7 @@ const sniCallback = (serverName, callback) => {
 }
 
 function start(opts = {
+    ipfsNodeUrl: null,
     ipfsNode: null
 }) {
     testENS()
@@ -78,12 +83,19 @@ function start(opts = {
         // 'https://ipfs.eth.limo'
     ]
 
+    const getIpfsGateway = () => {
+        // NOTE: If the host below is specified as localhost, the ipfs-node software will
+        // perform a 301 redirect to baf_ENCODED_HASH.ipfs.localhost. We don't want this,
+        // since node-fetch can't handle it.
+        return 'http://127.0.0.1:8080'
+    }
+
     let ensGateways = [
         (name) => `https://${name}.eth.limo`
     ]
 
-    if(opts.ipfsNode) {
-        ipfsGateways = [opts.ipfsNode, ...ipfsGateways]
+    if (opts.ipfsNodeUrl) {
+        ipfsGateways = [opts.ipfsNodeUrl, ...ipfsGateways]
     }
 
     // The local gateway receives requests on /*.
@@ -107,22 +119,27 @@ function start(opts = {
         }
 
         // Resolve ENS to content hash.
+        const ensName = host
         try {
             console.time(req.path)
-            req.ensData = await resolveENS(host);
+            req.ensData = await resolveENS(ensName);
             console.timeEnd(req.path)
         } catch(err) {
             return next(err)
         }
 
         const { codec, hash, dnsLinkName } = req.ensData
-        console.log(host, codec, hash, dnsLinkName)
+        console.log('resolveENS', ensName, codec, hash, dnsLinkName)
 
         let handler = {
             'ipfs-ns': getIpfs,
             'ipns-ns': getIpns,
         }
-        
+
+        if (!hash) {
+            return next(new Error(`No content for ENS name "${ensName}", hash was ${hash}`))
+        }
+
         if (!handler[codec]) {
             return next(new Error(`Dappnet cannot resolve ENS content type - multihash codec "${codec}"`))
         }
@@ -132,10 +149,30 @@ function start(opts = {
 
     async function getIpfs(req, res, next) {
         const cid = req.ensData.hash
-        const gatewayRewrite = `${ipfsGateways[0]}/ipfs/${cid}${req.path || '/'}`
+
+        // if (opts.ipfsNode) {
+        //     const ipfsPath = `/ipfs/${cid}${req.path || '/'}`
+            
+        //     console.log(req.hostname, `getIpfs`, `local-ipfs`, ipfsPath)
+
+        //     const asyncIterable = opts.ipfsNode.cat(ipfsPath)
+            
+        //     try {
+        //         await streamPipeline(asyncIterable, res);
+        //     } catch(err) {
+        //         next(err)
+        //         return
+        //     }
+
+        //     res.header = gatewayRes.headers.raw()
+        //     res.end()
+        //     return
+        // }
+
+        const ipfsPath = `/ipfs/${cid}${req.path || '/'}`
 
         try {
-            await proxyToGateway(req, gatewayRewrite, res)
+            await proxyToGateway(req, ipfsPath, res)
             return
         } catch (err) {
             return next(err)
@@ -143,29 +180,35 @@ function start(opts = {
     }
 
     async function getIpns(req, res, next) {
-        let gatewayRewrite
+        let ipfsPath
 
-        // Resolve the IPNS hash.
+        // Resolve the IPNS CID.
         const { dnsLinkName } = req.ensData
         if (dnsLinkName) {
-            const cid = await resolveDNSLink(dnsLinkName)
-            gatewayRewrite = `${ipfsGateways[0]}/ipfs/${cid}${req.path || '/'}`
+            console.time(`resolveDNSLink(${dnsLinkName})`)
+            cid = await resolveDNSLink(dnsLinkName)
+            console.timeEnd(`resolveDNSLink(${dnsLinkName})`)
+
+            ipfsPath = `/ipfs/${cid}${req.path || '/'}`
         } else {
-            const cid = req.ensData.hash
-            gatewayRewrite = `${ipfsGateways[0]}/ipfs/${cid}${req.path || '/'}`
+            const pubkeyHash = req.ensData.hash
+            const ipnsPath = `/ipns/${pubkeyHash}${req.path || '/'}`
+            ipfsPath = await resolveIPNS(opts.ipfsNode, ipnsPath)
         }
 
         try {
-            await proxyToGateway(req, gatewayRewrite, res)
+            await proxyToGateway(req, ipfsPath, res)
             return
         } catch (err) {
             return next(err)
         }
     }
 
-    const proxyToGateway = async (req, gatewayUrl, res) => {
-        console.log(req.hostname, gatewayUrl)
-        let gatewayRes = await fetch(gatewayUrl)
+    const proxyToGateway = async (req, ipfsPath, res) => {
+        const gatewayRewrite = `${getIpfsGateway()}${ipfsPath}`
+
+        console.log(req.hostname, gatewayRewrite)
+        let gatewayRes = await fetch(gatewayRewrite)
 
         await streamPipeline(gatewayRes.body, res);
         // res.send(gatewayRes.body)
@@ -184,7 +227,7 @@ function start(opts = {
 
     app.use((err, req, res, next) => {
         console.error(err.stack)
-        res.status(500).send('Something broke!')
+        res.status(500).send(`Dappnet - ${err.toString()}`)
     })
 
     const httpsServer = require('https').Server({

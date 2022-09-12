@@ -14,6 +14,9 @@ serve({
 // const { autoUpdater } = require("electron-updater")
 const argsParser = require('simple-args-parser')
 
+
+// import * as IPFS from 'ipfs-core'
+
 const createWindow = () => {
     setupMainProcessIPC()
 
@@ -33,6 +36,7 @@ const createWindow = () => {
     })
     console.log(args)
 
+
     const mainWindow = new BrowserWindow({
         width: 800,
         height: 600,
@@ -51,17 +55,66 @@ const createWindow = () => {
     });
 
     async function main() {
-        // Launch .eth proxy server.
-        // let ensServer = require('../../local-gateway/src/index').start()
         const gatewayOpts = {}
         if (args['ipfs-node']) {
-            gatewayOpts.ipfsNode = args['ipfs-node']
+            gatewayOpts.ipfsNodeURL = args['ipfs-node']
         }
-        let ensServer = require('@dappnet/local-gateway').start(gatewayOpts)
+        
+        const enableLocalIpfsNode = false
+        if (enableLocalIpfsNode) {
+            // Launch the IPFS node.
+            const IPFS = await import('ipfs-core');
+            const ipfsNode = await IPFS.create({
+                start: true,
+                // config: {
+                //     // https://docs.ipfs.tech/how-to/peering-with-content-providers/#content-provider-list
+                //     // Bootstrap: [
+                //     //     "/dnsaddr/node-8.ingress.cloudflare-ipfs.com",
+                //     //     "/dns/cluster0.fsn.dwebops.pub",
+                //     //     "/ip4/139.178.68.217/tcp/6744"
+                //     // ]
+                // },
+                EXPERIMENTAL: {
+                    ipnsPubsub: true,
+                }
+            })
+            const id = await ipfsNode.id();
+            console.log(id);
+
+            // const ipfsPath = "/ipfs/QmTau1nKy3axaPKU866BWkf8CfaiKrMYWXC5sVUVpJRSgW/"
+            async function thing() {
+                const ipfsPath = "QmTau1nKy3axaPKU866BWkf8CfaiKrMYWXC5sVUVpJRSgW"
+                for await (const chunk of ipfsNode.get(ipfsPath)) {
+                    console.info('c', chunk)
+                }
+
+            }
+
+            thing()
+
+            gatewayOpts.ipfsNode = ipfsNode
+        }
+
+        const enableLocalIpfsHttpClient = true
+        if (enableLocalIpfsHttpClient) {
+            const IPFS = await import('ipfs-http-client');
+            const ipfsNode = IPFS.create({
+                url: "http://127.0.0.1:5001"
+            })
+            gatewayOpts.ipfsNode = ipfsNode
+            gatewayOpts.ipfsNodeURL = 'http://localhost:5001'
+        }
+
+
+
+        // Launch the .eth/IPFS gateway.
+        const ensGateway = require('@dappnet/local-gateway').start(gatewayOpts)
 
         // Launch SOCKS5 proxy server.
         // let socksServer = require('../../local-socks5-proxy/proxy').start()
-        let socksServer = require('@dappnet/local-socks5-proxy').start()
+        const socksServer = require('@dappnet/local-socks5-proxy').start()
+
+
 
         let logs = ''
         function log(txt) {
