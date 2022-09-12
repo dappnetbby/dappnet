@@ -51,10 +51,11 @@ if (cluster.isMaster) {
       });
       proxy.on('close', function(had_error) {
         try {
-          if(localAddress && localPort)
-            console.log('The proxy %s:%d closed', localAddress, localPort);
-          else 
+          if(localAddress && localPort) {
+            // console.log('The proxy %s:%d closed', localAddress, localPort);
+          } else {
             console.error('Connect to %s:%d failed', address, port);
+          }
           socket.end();
         } catch (err) {
         }
