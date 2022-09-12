@@ -14,9 +14,6 @@ serve({
 // const { autoUpdater } = require("electron-updater")
 const argsParser = require('simple-args-parser')
 
-
-// import * as IPFS from 'ipfs-core'
-
 const createWindow = () => {
     setupMainProcessIPC()
 
@@ -34,7 +31,7 @@ const createWindow = () => {
     }, (err) => {
         console.log(err)
     })
-    console.log(args)
+    console.log('args', args)
 
 
     const mainWindow = new BrowserWindow({
@@ -105,16 +102,11 @@ const createWindow = () => {
             gatewayOpts.ipfsNodeURL = 'http://localhost:5001'
         }
 
-
-
         // Launch the .eth/IPFS gateway.
         const ensGateway = require('@dappnet/local-gateway').start(gatewayOpts)
 
         // Launch SOCKS5 proxy server.
-        // let socksServer = require('../../local-socks5-proxy/proxy').start()
         const socksServer = require('@dappnet/local-socks5-proxy').start()
-
-
 
         let logs = ''
         function log(txt) {
@@ -133,7 +125,6 @@ const createWindow = () => {
             await mainWindow.loadURL('app://-')
         }
 
-        
         // await mainWindow.loadURL('app://x');
         // win.loadFile()
 
