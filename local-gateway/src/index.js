@@ -12,7 +12,6 @@ const { promisify } = require('node:util')
 const streamPipeline = promisify(pipeline);
 const { CID } = require('multiformats/cid')
 
-
 const {
     testENS,
     resolveENS,
@@ -25,11 +24,9 @@ const {
     generateCertificate,
     generateCertificateOpenSSL
 } = require('./certificates');
-const { clearScreenDown } = require('readline');
 
-const PROXY_PORT = 10422
-const PROXY_PORT_HTTPS = 10423
-const PROXY_PORT_HTTPS_INNER = 10424
+const PROXY_PORT_HTTP = 10422
+const PROXY_PORT_HTTPS = 10424
 
 
 function timeoutAfter(seconds) {
@@ -43,7 +40,6 @@ function timeoutAfter(seconds) {
 // Autogenerate a certificate for any .eth domain, as a part of the Server Name Identification (SNI) callback in the TLS protocol.
 const sniCallback = (serverName, callback) => {
     // console.log('sni', serverName)
-
     var tld = serverName.slice(-3);
     if (tld != 'eth') {
         return;
@@ -74,9 +70,11 @@ function start(opts = {
     ipfsNodeUrl: null,
     ipfsNode: null
 }) {
-    testENS()
     const app = express();
+    
+    // Preload DNS endpoints.
     getDNSEndpoints()
+    testENS()
     // resolveENS('uniswap.eth')
 
     let ipfsGateways = [
@@ -261,14 +259,14 @@ function start(opts = {
         SNICallback: sniCallback,
     }, app);
 
-    httpsServer.listen(PROXY_PORT_HTTPS_INNER, () => {
-        console.log(`Proxy server listening on https://localhost:${PROXY_PORT_HTTPS_INNER}`)
+    httpsServer.listen(PROXY_PORT_HTTPS, () => {
+        console.log(`Proxy server listening on https://localhost:${PROXY_PORT_HTTPS}`)
     })
 
     // HTTP.
     const httpServer = http.createServer(app);
-    httpServer.listen(PROXY_PORT, () => {
-        console.log(`Proxy server listening on http://localhost:${PROXY_PORT}`)
+    httpServer.listen(PROXY_PORT_HTTP, () => {
+        console.log(`Proxy server listening on http://localhost:${PROXY_PORT_HTTP}`)
     })
 }
 
