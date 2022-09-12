@@ -67,6 +67,9 @@ const sniCallback = (serverName, callback) => {
     }
 }
 
+class ENSNoContentError extends Error { }
+class UnsupportedContentTypeError extends Error { }
+
 function start(opts = {
     ipfsNodeUrl: null,
     ipfsNode: null
@@ -119,6 +122,7 @@ function start(opts = {
         }
 
         // Resolve ENS to content hash.
+        req.ensName = host
         const ensName = host
         try {
             console.time(req.path)
@@ -137,14 +141,18 @@ function start(opts = {
         }
 
         if (!hash) {
-            return next(new Error(`No content for ENS name "${ensName}", hash was ${hash}`))
+            return next(new ENSNoContentError(`No content for ENS name "${ensName}", hash was ${hash}`))
         }
 
         if (!handler[codec]) {
-            return next(new Error(`Dappnet cannot resolve ENS content type - multihash codec "${codec}"`))
+            return next(new UnsupportedContentTypeError(`Dappnet cannot resolve ENS content type - multihash codec "${codec}"`))
         }
 
-        handler[codec](req, res, next)
+        try {
+            await handler[codec](req, res, next)
+        } catch(err) {
+            next(err)
+        }
     });
 
     async function getIpfs(req, res, next) {
@@ -188,12 +196,19 @@ function start(opts = {
             console.time(`resolveDNSLink(${dnsLinkName})`)
             cid = await resolveDNSLink(dnsLinkName)
             console.timeEnd(`resolveDNSLink(${dnsLinkName})`)
-
             ipfsPath = `/ipfs/${cid}${req.path || '/'}`
+            
+            req.ipnsData = {
+                ipfsPath
+            }
         } else {
             const pubkeyHash = req.ensData.hash
             const ipnsPath = `/ipns/${pubkeyHash}${req.path || '/'}`
             ipfsPath = await resolveIPNS(opts.ipfsNode, ipnsPath)
+
+            req.ipnsData = {
+                ipfsPath
+            }
         }
 
         try {
@@ -227,7 +242,17 @@ function start(opts = {
 
     app.use((err, req, res, next) => {
         console.error(err.stack)
-        res.status(500).send(`Dappnet - ${err.toString()}`)
+        const { ensName } = req
+        
+        if (err instanceof ENSNoContentError) {
+            errorPage = noContentForENSNamePage
+        } else if (err instanceof UnsupportedContentTypeError) {
+            errorPage = unsupportedContentPage
+        } else {
+            errorPage = defaultErrorPage
+        }
+
+        res.status(500).send(errorPage({ err, req, ensName }))
     })
 
     const httpsServer = require('https').Server({
@@ -248,6 +273,88 @@ function start(opts = {
 }
 
 
+const pageStyles = `
+html {
+  box-sizing: border-box;
+  font-size: 16px;
+}
+
+body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+#error {
+    text-align: left;
+    width: 800px;
+    margin: 0 auto;
+    padding-top: 2rem;
+}
+
+#error h2 {
+    margin-bottom: 0;
+}
+
+p {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+`
+const noContentForENSNamePage = ({ req, err, ensName }) => {
+    return `
+<!doctype html>
+<html>
+    <head>
+        <title>${ensName}</title>
+        <style>${pageStyles}</style>
+    </head>
+    <body>
+        <div id="error">
+            <small>Dappnet</small>
+            <h2>There was no content found for ENS name ${ensName}</h2>
+            <p>The content hash was empty.</p>
+        </div>
+    </body>
+</html>
+`
+}
+
+const unsupportedContentPage = ({ req, err, ensName }) => {
+    return `
+<!doctype html>
+<html>
+    <head>
+        <title>${ensName}</title>
+        <style>${pageStyles}</style>
+    </head>
+    <body>
+        <div id="error">
+            <small>Dappnet</small>
+            <h2>Couldn't load ENS content for ${ensName}</h2>
+            <pre>${`${err.toString()}\nENS data:\n${JSON.stringify(req.ensData, null, 2)}\nIPNS data:\n${JSON.stringify(req.ipnsData, null, 2)}`}</pre>
+        </div>
+    </body>
+</html>
+`
+}
+
+const defaultErrorPage = ({ req, err, ensName }) => {
+    return `
+<!doctype html>
+<html>
+    <head>
+        <title>${ensName}</title>
+        <style>${pageStyles}</style>
+    </head>
+    <body>
+        <div id="error">
+            <small>Dappnet</small>
+            <h2>There was an unexpected error while loading ${ensName}</h2>
+            <pre>${`${err.toString()}\nENS data:\n${JSON.stringify(req.ensData, null, 2)}\nIPNS data:\n${JSON.stringify(req.ipnsData, null, 2)}`}</pre>
+        </div>
+    </body>
+</html>
+`
+}
 
 module.exports = {
     start
