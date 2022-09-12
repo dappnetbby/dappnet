@@ -36,8 +36,8 @@ In order of usage:
  - [chrome-bit-domain-extension](https://github.com/Tagide/chrome-bit-domain-extension.git) for their work in building this extension for the original decentralized DNS, Namecoin / .bit domains. They came up with the idea for dynamically proxying the web requests to a backend (they used HTTP, we use SOCKS5).
  - [sequoiar/socks5](https://github.com/sequoiar/socks5) - SOCKS5 proxy written in Node.js, which I've reused in this project.
  - [jrsasign](https://github.com/kjur/jsrsasign) - an absolutely cooked reimplementation of most of OpenSSL in JS.
- - Zooko. I'll never forget learning about [Zooko's triangle](https://en.wikipedia.org/wiki/Zooko%27s_triangle).
- - IPFS and its inventor, Juan Benet. IPFS is an awesome tech stack, that I've really come to appreciate while building this (and reading their [whitepaper](https://raw.githubusercontent.com/ipfs/ipfs/master/papers/ipfs-cap2pfs/ipfs-p2p-file-system.pdf)). It's got a lot of subtle design detail that you only pickup when building with it.
- - ENS devs.
- - Ethereum core devs. They don't get enough praise, they earn fuck-all while a bunch of idiots start ponzi schemes. We love you guys.
-
+ - [Zooko](https://en.wikipedia.org/wiki/Zooko_Wilcox-O%27Hearn). I'll never forget learning about [Zooko's triangle](https://en.wikipedia.org/wiki/Zooko%27s_triangle).
+ - [IPFS](https://docs.ipfs.io/) and its inventor, Juan Benet. IPFS is an awesome tech stack, that I've really come to appreciate while building this (and reading their [whitepaper](https://raw.githubusercontent.com/ipfs/ipfs/master/papers/ipfs-cap2pfs/ipfs-p2p-file-system.pdf)). It's got a lot of subtle design detail that you only pickup when building with it.
+ - [Ethereum Name System](https://docs.ens.domains/) and its builders. You guys did a good job. Worth reading the original [EIP](https://eips.ethereum.org/EIPS/eip-137) to see their soul in their work.
+ - [Ethereum](https://ethereum.org) and its core devs. They don't get enough praise, we love you guys.
+ - And the OG's before us - [BitTorrent](https://en.wikipedia.org/wiki/BitTorrent), you are the best.
