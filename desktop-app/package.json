@@ -7,7 +7,8 @@
     "start": "electron-forge start --",
     "package": "electron-forge package",
     "build": "electron-forge make",
-    "pack": "electron-builder -c.compression=store",
+    "pack": "electron-builder",
+    "pack:testing": "electron-builder -c.compression=store --dir --mac --arm64",
     "pack2": "electron-builder --linux",
     "dist": "electron-builder"
   },

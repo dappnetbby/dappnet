@@ -72,7 +72,7 @@ class Cache {
 }
 
 let ensCache = new Cache({
-    expiry: 60 * 1000 * 60
+    expiry: 1000 * 60 * 60 // 1hr
 })
 
 
@@ -207,7 +207,10 @@ async function resolveDNSLink(name) {
 }
 
 
-const ipnsCache = new Cache()
+const ipnsCache = new Cache({
+    expiry: 1000 * 60 * 60 // 1hr
+})
+
 async function resolveIPNS(ipfsHttpClient, ipnsPath) {
     // Check cache.
     let cached = ipnsCache.get(ipnsPath)
@@ -218,7 +221,7 @@ async function resolveIPNS(ipfsHttpClient, ipnsPath) {
     const value = ipfsPathRoot
 
     // Insert into cache.
-    ipnsCache.put(ipnsPath, value, 60*60*1000)
+    ipnsCache.put(ipnsPath, value)
 
     // Return the IPFS root path (/ipfs/{cid}/).
     return value

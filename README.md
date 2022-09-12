@@ -2,15 +2,23 @@
 dappnet
 =======
 
-> some cool ass quote that's relevant to freedom.\
+## What is the Dappnet?
 
-Access .eth dapps that can't be taken down.
+The Dappnet is a permissionless application network that can't be taken down. 
 
-Dappnet is a decentralized solution to accessing .eth dapps and websites. No more gateways like .eth.limo, now .eth domains are natively handled by your browser! The system is fully decentralized and can't be taken down - .eth domains can't be seized, and their content is on IPFS, so it can't be censored either.
+It uses .eth domain names, IPFS for P2P content distribution and location, and the web browser as the application platform.
+
+The Dappnet suite of tools allows you to access `.eth` dapps in your browser (Firefox/Chrome), and publish to your `.eth` domains. There is no dependence on centralized gateways (.eth.limo, .eth.link) or servers.
+
+What else? **Dappnet is fast. Way faster than you think.**.
 
 ## Foreward.
 
 It's funny how life loops around. 10yrs ago, when I was ?15?, instead of drinking booze and having sex, I was being a fucking nerd and interested in [building decentralized DNS](https://github.com/liamzebedee/D3NS).
+
+BitTorrent is the OG of P2P technology. And it's freaking usable - everyone I know knows how to download torrents. IPFS is so much harder, **even as developers** IPFS's API's are notoriously confusing.
+
+What happened if browsing the web was like one big torrent? If every website you visited was downloaded from a P2P swarm? That's what Dappnet is. 
 
 ## Design.
 
@@ -31,5 +39,5 @@ In order of usage:
  - Zooko. I'll never forget learning about [Zooko's triangle](https://en.wikipedia.org/wiki/Zooko%27s_triangle).
  - IPFS and its inventor, Juan Benet. IPFS is an awesome tech stack, that I've really come to appreciate while building this (and reading their [whitepaper](https://raw.githubusercontent.com/ipfs/ipfs/master/papers/ipfs-cap2pfs/ipfs-p2p-file-system.pdf)). It's got a lot of subtle design detail that you only pickup when building with it.
  - ENS devs.
- - Ethereum core devs.
+ - Ethereum core devs. They don't get enough praise, they earn fuck-all while a bunch of idiots start ponzi schemes. We love you guys.
 

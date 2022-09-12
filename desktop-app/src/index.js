@@ -12,7 +12,9 @@ serve({
 });
 
 // const { autoUpdater } = require("electron-updater")
-const argsParser = require('simple-args-parser')
+const argsParser = require('simple-args-parser');
+const { spawn } = require('child_process');
+const electronIsDev = require('electron-is-dev');
 
 const createWindow = () => {
     setupMainProcessIPC()
@@ -55,6 +57,28 @@ const createWindow = () => {
         const gatewayOpts = {}
         if (args['ipfs-node']) {
             gatewayOpts.ipfsNodeURL = args['ipfs-node']
+        } else {
+            // Start local IPFS node.
+            const ipfsPath = electronIsDev
+                ? path.join(app.getAppPath(), `/../vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs`).replace('app.asar', 'app.asar.unpacked')
+                : __dirname + `/../vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs`;
+            
+            console.log(ipfsPath)
+            const ipfs = spawn(ipfsPath, [...`daemon --stream-channels --enable-namesys-pubsub --enable-gc --manage-fdlimit`.split(' ')])
+
+            ipfs.stdout.on('data', (data) => {
+                console.log(`[ipfs] ${data}`)
+            });
+
+            ipfs.stderr.on('data', (data) => {
+                console.error(`[ipfs] ${data}`);
+            });
+
+            ipfs.on('close', (code) => {
+                if (code !== 0) {
+                    console.log(`ipfs process exited with code ${code}`);
+                }
+            });
         }
         
         const enableLocalIpfsNode = false
@@ -79,15 +103,13 @@ const createWindow = () => {
             console.log(id);
 
             // const ipfsPath = "/ipfs/QmTau1nKy3axaPKU866BWkf8CfaiKrMYWXC5sVUVpJRSgW/"
-            async function thing() {
-                const ipfsPath = "QmTau1nKy3axaPKU866BWkf8CfaiKrMYWXC5sVUVpJRSgW"
-                for await (const chunk of ipfsNode.get(ipfsPath)) {
-                    console.info('c', chunk)
-                }
-
-            }
-
-            thing()
+            // async function thing() {
+            //     const ipfsPath = "QmTau1nKy3axaPKU866BWkf8CfaiKrMYWXC5sVUVpJRSgW"
+            //     for await (const chunk of ipfsNode.get(ipfsPath)) {
+            //         console.info('c', chunk)
+            //     }
+            // }
+            // thing()
 
             gatewayOpts.ipfsNode = ipfsNode
         }

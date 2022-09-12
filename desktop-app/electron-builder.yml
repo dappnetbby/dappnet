@@ -1,11 +1,11 @@
-appId: eth.dapp
+appId: eth.dappnet
 copyright: Liam Zebedee 2022.
 productName: Dappnet
 
-# asar: false
 compression: store
 asarUnpack:
  - node_modules/@dappnet/local-gateway/
+ - vendor/
 
 publish:
   provider: github
@@ -21,6 +21,8 @@ files:
   - src/
   - ui/
   - node_modules/
+  - ./vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs
+  # - vendor/ipfs/go-ipfs_v0.13.0_${platform}-${arch}/ipfs
 
 dmg:
   contents:
@@ -33,12 +35,15 @@ dmg:
       y: 150
 
 mac:
+  # entitlements: build/entitlements.mac.plist
+  # entitlementsInherit: build/entitlements.mac.plist
   target:
-    - target: default
+    - target: dmg
       arch:
-       - x64
-       - arm64
+       - x64 # arm64
+      #  - arm64
   
+  identity: null
   # Verify code signing.
   gatekeeperAssess: true
   
@@ -47,6 +52,11 @@ mac:
   # extendInfo:
 
   # binaries Array<String> | “undefined” - Paths of any extra binaries that need to be signed.
+  # binaries:
+  #  - /Users/liamz/Documents/Projects/dappnet/desktop-app/dist/mac-arm64/Dappnet.app/vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs
+  #  - vendor/ipfs/go-ipfs_v0.13.0_${platform}-${arch}/ipfs
+  #  - vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs
+
   category: public.app-category.tools
 
 win:
