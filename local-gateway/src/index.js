@@ -107,7 +107,7 @@ function start(opts = {
     // Host: uniswap.eth
     // ```
     app.get('/*', async (req, res, next) => {
-        res.setHeader('X-Special-Proxy-Header', 'foobar');
+        res.setHeader('X-Dappnet-Gateway', require('../package.json').version);
 
         const host = req.hostname
         if (!host || !host.length) return
@@ -176,6 +176,7 @@ function start(opts = {
         // }
 
         const ipfsPath = `/ipfs/${cid}${req.path || '/'}`
+        res.setHeader('X-Dappnet-IPFS', `${cid}`);
 
         try {
             await proxyToGateway(req, ipfsPath, res)
@@ -195,6 +196,9 @@ function start(opts = {
             cid = await resolveDNSLink(dnsLinkName)
             console.timeEnd(`resolveDNSLink(${dnsLinkName})`)
             ipfsPath = `/ipfs/${cid}${req.path || '/'}`
+
+            // TODO: DNSLink resolution assumes only IPFS content here.
+            res.setHeader('X-Dappnet-IPFS', `${cid}`);
             
             req.ipnsData = {
                 ipfsPath
@@ -204,10 +208,17 @@ function start(opts = {
             const ipnsPath = `/ipns/${pubkeyHash}${req.path || '/'}`
             ipfsPath = await resolveIPNS(opts.ipfsNode, ipnsPath)
 
+            res.setHeader('X-Dappnet-IPNS', `${ipnsPath}`);
+            // TODO: ugly temp hack.
+            
+            const cid = (new URL("http://example-ipfs-path-only-for-testing.com" + ipfsPath)).pathname.split('/')[2] // part after /ipfs/
+            res.setHeader('X-Dappnet-IPFS', `${cid}`);
+
             req.ipnsData = {
                 ipfsPath
             }
         }
+        
 
         try {
             await proxyToGateway(req, ipfsPath, res)
@@ -223,10 +234,21 @@ function start(opts = {
         console.log(req.hostname, gatewayRewrite)
         let gatewayRes = await fetch(gatewayRewrite)
 
+        // TODO: make this smart later.
+        const headers = `Accept-Ranges Content-Length Content-Type X-Ipfs-Path X-Ipfs-Roots Date`.split(' ')
+        const gatewayHeaders = gatewayRes.headers.raw()
+        console.log(gatewayRes.headers)
+        headers.map(name => {
+            const lowercaseName = name.toLowerCase()
+            if (!gatewayHeaders[lowercaseName]) return
+            // TODO these are all lowercase.
+            const val = gatewayHeaders[lowercaseName][0]
+            res.setHeader(name, val)
+        })
+
         await streamPipeline(gatewayRes.body, res);
         // res.send(gatewayRes.body)
 
-        res.header = gatewayRes.headers.raw()
         res.end()
     }
 

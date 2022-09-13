@@ -20,6 +20,8 @@
 	},
 	"permissions": [
 		"proxy", 
+		"tabs",
+		"activeTab",
 		"webRequest", 
 		"webRequestBlocking", 
 		"*://*/*"
