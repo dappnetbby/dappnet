@@ -7,14 +7,15 @@ const { setupMainProcessIPC } = require('./ipc-main')
 
 const serve = require('electron-serve');
 
-serve({ 
-    directory: __dirname + '/../ui/out/'
-});
-
 // const { autoUpdater } = require("electron-updater")
 const argsParser = require('simple-args-parser');
 const { spawn } = require('child_process');
 const electronIsDev = require('electron-is-dev');
+const { IPFSHttpClient } = require("./es6.mjs")
+
+
+const { Tray } = require('electron')
+
 
 const createWindow = () => {
     setupMainProcessIPC()
@@ -36,10 +37,20 @@ const createWindow = () => {
     console.log('args', args)
 
 
+    // const appIcon = new Tray(__dirname + '/../build/icon.png')
+    const nativeImage = require('electron').nativeImage
+    const icon = nativeImage.createFromPath(__dirname + '/../build/icon.icns')
+
+    serve({
+        directory: __dirname + '/../ui/out/'
+    });
+
     const mainWindow = new BrowserWindow({
         width: 800,
         height: 600,
         title: "Dappnet",
+        // icon,
+        icon: __dirname + '/../build/icon.icns',
         focusable: true,
         webPreferences: {
             preload: path.join(__dirname, 'ipc-renderer.js')
@@ -62,7 +73,7 @@ const createWindow = () => {
             const ipfsPath = electronIsDev
                 ? path.join(app.getAppPath(), `/../vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs`).replace('app.asar', 'app.asar.unpacked')
                 : __dirname + `/../vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs`;
-            
+
             console.log(ipfsPath)
             const ipfs = spawn(ipfsPath, [...`daemon --stream-channels --enable-namesys-pubsub --enable-gc --manage-fdlimit`.split(' ')])
 
@@ -80,11 +91,10 @@ const createWindow = () => {
                 }
             });
         }
-        
+
         const enableLocalIpfsNode = false
         if (enableLocalIpfsNode) {
             // Launch the IPFS node.
-            const IPFS = await import('ipfs-core');
             const ipfsNode = await IPFS.create({
                 start: true,
                 // config: {
@@ -116,8 +126,7 @@ const createWindow = () => {
 
         const enableLocalIpfsHttpClient = true
         if (enableLocalIpfsHttpClient) {
-            const IPFS = await import('ipfs-http-client');
-            const ipfsNode = IPFS.create({
+            const ipfsNode = IPFSHttpClient.create({
                 url: "http://127.0.0.1:5001"
             })
             gatewayOpts.ipfsNode = ipfsNode
