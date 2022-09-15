@@ -1,3 +1,5 @@
+import { app, BrowserWindow, ipcMain } from 'electron'
+
 const { app, BrowserWindow, ipcMain } = require('electron');
 const isDev = require('electron-is-dev');
 const { shell } = require('electron');
@@ -21,7 +23,7 @@ const createWindow = () => {
     setupMainProcessIPC()
 
     app.setLoginItemSettings({
-        openAtLogin: true,
+        // openAtLogin: true,
         openAsHidden: true, // macOS-only.
         // TODO: we need to add additional settings for auto-update on windows.
     })
