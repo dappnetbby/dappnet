@@ -75,6 +75,7 @@ function start(opts = {
     // Preload DNS endpoints.
     getDNSEndpoints()
     testENS()
+
     // resolveENS('uniswap.eth')
 
     let ipfsGateways = [
@@ -218,7 +219,6 @@ function start(opts = {
                 ipfsPath
             }
         }
-        
 
         try {
             await proxyToGateway(req, ipfsPath, res)
@@ -291,8 +291,26 @@ function start(opts = {
     httpServer.listen(PROXY_PORT_HTTP, () => {
         console.log(`Proxy server listening on http://localhost:${PROXY_PORT_HTTP}`)
     })
+
+
+
+    preload('app.ens.eth')
+    preload('uniswap.eth')
+    preload('tornadocash.eth')
+    preload('rollerskating.eth')
+    preload('liamz.eth')
 }
 
+function preload(ensName) {
+    fetch(`http://127.0.0.1:10422/`, {
+        headers: {
+            'Host': ensName
+        }
+    })
+    .catch(err => {
+        console.debug('fetch', err)
+    })
+}
 
 const pageStyles = `
 html {
@@ -331,8 +349,9 @@ const noContentForENSNamePage = ({ req, err, ensName }) => {
     <body>
         <div id="error">
             <small>Dappnet</small>
-            <h2>There was no content found for ENS name ${ensName}</h2>
+            <h2>There was no content found for ${ensName}</h2>
             <p>The content hash was empty.</p>
+            <p>If you're the owner of this name, you can <a href="https://app.ens.eth/#/name/${ensName}/details">configure it here</a> on ENS.
         </div>
     </body>
 </html>
@@ -350,7 +369,8 @@ const unsupportedContentPage = ({ req, err, ensName }) => {
     <body>
         <div id="error">
             <small>Dappnet</small>
-            <h2>Couldn't load ENS content for ${ensName}</h2>
+            <h2>Couldn't load content for ${ensName}</h2>
+            <p>This content type is not yet supported by Dappnet or couldn't be parsed.</p>
             <pre>${`${err.toString()}\nENS data:\n${JSON.stringify(req.ensData, null, 2)}\nIPNS data:\n${JSON.stringify(req.ipnsData, null, 2)}`}</pre>
         </div>
     </body>
