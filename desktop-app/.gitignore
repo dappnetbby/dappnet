@@ -1,5 +1,6 @@
 node_modules
 out
+build
 dist
 vendor/ipfs/**
 !vendor/ipfs/.gitkeep

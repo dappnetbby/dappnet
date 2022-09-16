@@ -2,28 +2,26 @@
   "name": "@dappnet/desktop-app",
   "version": "1.0.0",
   "description": "__",
-  "main": "src/index.js",
+  "main": "build/index.js",
   "scripts": {
-    "start": "electron-forge start --",
-    "package": "electron-forge package",
-    "build": "electron-forge make",
+    "build": "tsc",
+    "watch": "tsc -w",
+    "start": "electron .",
     "pack": "electron-builder",
     "pack:testing": "electron-builder -c.compression=store --dir --mac --arm64",
     "pack2": "electron-builder --linux",
-    "dist": "electron-builder"
+    "dist": "electron-builder",
+    "lint": "eslint --fix src/"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@electron-forge/cli": "^6.0.0-beta.65",
-    "@electron-forge/maker-deb": "^6.0.0-beta.65",
-    "@electron-forge/maker-rpm": "^6.0.0-beta.65",
-    "@electron-forge/maker-squirrel": "^6.0.0-beta.65",
-    "@electron-forge/maker-zip": "^6.0.0-beta.65",
     "asar": "^3.2.0",
-    "electron": "^20.1.1",
-    "electron-builder": "^23.3.3"
+    "electron": "^20.1.4",
+    "electron-builder": "^23.3.3",
+    "typescript": "^4.8.3",
+    "eslint": "^8.23.1"
   },
   "dependencies": {
     "@dappnet/local-gateway": "file:../local-gateway",
@@ -32,36 +30,9 @@
     "electron-serve": "^1.1.0",
     "electron-squirrel-startup": "^1.0.0",
     "electron-updater": "^5.2.1",
-    "ipfs-http-client": "^58.0.0",
+    "ipfs-http-client": "^56.0.2",
     "shelljs": "^0.8.5",
-    "simple-args-parser": "^1.0.1"
-  },
-  "_id": "desktop-app@1.0.0",
-  "config": {
-    "forge": {
-      "packagerConfig": {},
-      "makers": [
-        {
-          "name": "@electron-forge/maker-squirrel",
-          "config": {
-            "name": "desktop_app"
-          }
-        },
-        {
-          "name": "@electron-forge/maker-zip",
-          "platforms": [
-            "darwin"
-          ]
-        },
-        {
-          "name": "@electron-forge/maker-deb",
-          "config": {}
-        },
-        {
-          "name": "@electron-forge/maker-rpm",
-          "config": {}
-        }
-      ]
-    }
+    "simple-args-parser": "^1.0.1",
+    "source-map-support": "^0.5.21"
   }
 }

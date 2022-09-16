@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer } = require('electron')
+import {contextBridge, ipcRenderer} from 'electron';
 
 // Electron apps are split into a main process (Node.js environment) and a renderer process (web environment).
 // The context bridge allows us to perform IPC between them.
@@ -6,22 +6,22 @@ const { contextBridge, ipcRenderer } = require('electron')
 
 const ipcMethods = [
     'statusCheck',
-    'installCA'
-]
+    'installCA',
+];
 
 function setupRendererProcessIPC() {
     const api = ipcMethods
-        .map(methodName => {
+        .map((methodName) => {
             return {
                 [methodName]: function() {
-                    return ipcRenderer.invoke(`main:${methodName}`, ...arguments)
-                }
-            }
+                    return ipcRenderer.invoke(`main:${methodName}`, ...arguments);
+                },
+            };
         })
-        .reduce((prev, curr) => Object.assign(prev, curr), {})
+        .reduce((previous, current) => Object.assign(previous, current), {});
 
-    console.log(`IPC renderer API:`, api)
-    contextBridge.exposeInMainWorld('electronMain', api)
+    console.log(`IPC renderer API:`, api);
+    contextBridge.exposeInMainWorld('electronMain', api);
 }
 
-setupRendererProcessIPC()
+setupRendererProcessIPC();

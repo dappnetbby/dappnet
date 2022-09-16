@@ -237,7 +237,8 @@ function start(opts = {
         // TODO: make this smart later.
         const headers = `Accept-Ranges Content-Length Content-Type X-Ipfs-Path X-Ipfs-Roots Date`.split(' ')
         const gatewayHeaders = gatewayRes.headers.raw()
-        console.log(gatewayRes.headers)
+        // console.log(gatewayRes.headers)
+
         headers.map(name => {
             const lowercaseName = name.toLowerCase()
             if (!gatewayHeaders[lowercaseName]) return
