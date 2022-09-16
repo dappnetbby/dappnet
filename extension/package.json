@@ -1,13 +1,13 @@
 {
   "name": "@dappnet/extension",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "",
   "source": "src/index.js",
   "scripts": {
-    "build:chrome": "rm -rf dist/chrome/ && parcel build src/chrome/manifest.json --dist-dir dist/chrome/",
-    "build:firefox": "rm -rf dist/firefox/ && parcel build src/firefox/manifest.json --dist-dir dist/firefox/",
-    "watch:chrome": "parcel watch src/chrome/manifest.json --dist-dir dist/chrome/",
-    "watch:firefox": "parcel watch src/firefox/manifest.json --dist-dir dist/firefox/"
+    "build:chrome": "rm -rf dist/chrome/ && parcel build src/chrome/manifest.json --dist-dir build/chrome/ --config @parcel/config-webextension",
+    "build:firefox": "rm -rf dist/firefox/ && parcel build src/firefox/manifest.json --dist-dir build/firefox/ --config @parcel/config-webextension",
+    "watch:chrome": "parcel watch src/chrome/manifest.json --dist-dir build/chrome/ --config @parcel/config-webextension",
+    "watch:firefox": "parcel watch src/firefox/manifest.json --dist-dir build/firefox/ --config @parcel/config-webextension"
   },
   "repository": {
     "type": "git",
@@ -30,6 +30,7 @@
   "devDependencies": {
     "@parcel/config-webextension": "^2.7.0",
     "@parcel/transformer-sass": "^2.7.0",
+    "@parcel/transformer-webmanifest": "^2.7.0",
     "@wext/shipit": "^0.2.1",
     "assert": "^2.0.0",
     "debug": "^4.3.4",

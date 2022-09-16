@@ -1,32 +1,33 @@
 import * as sourceMap from 'source-map-support';
 sourceMap.install();
 import * as path from 'node:path';
-import {spawn} from 'node:child_process';
+import {spawn, spawnSync} from 'node:child_process';
 
 import {app, BrowserWindow, shell} from 'electron';
 import electronIsDev from 'electron-is-dev';
 import serve from 'electron-serve';
-import * as argsParser from 'simple-args-parser';
 import * as IPFSHttpClient from 'ipfs-http-client';
 
 import {setupMainProcessIPC} from './ipc-main';
 
 import * as LocalGateway from '@dappnet/local-gateway';
 import * as LocalSocksProxy from '@dappnet/local-socks5-proxy';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import * as _ from 'lodash'
+import { ipfsConfigForFastTeens } from './ipfs';
+import * as yargs from 'yargs'
 
 // Configure auto-updates.
 // const { autoUpdater } = require("electron-updater")
 
 // Parse arguments.
-// TODO: this doesn't work when the args are missing.
 console.log(process.argv);
-const arguments_ = argsParser.parse(process.argv, {
-    long: ['ipfs-node:'],
-    errOnDisallowed: false,
-}, (error) => {
-    console.log(error);
-});
-console.log('args', arguments_);
+// TODO: configure local ipfs node.
+// yargs
+//     .option('ipfs-node', {
+//         description
+//     })
 
 
 //
@@ -66,38 +67,98 @@ app.on('window-all-closed', () => {
 async function setupIpfs() {
     const gatewayOptions = {};
 
-    if (arguments_['ipfs-node']) {
+    // mock until I've got yargs in.
+    const argv = {}
+    if (argv['ipfs-node']) {
         gatewayOptions.ipfsNodeURL = arguments_['ipfs-node'];
     } else {
         // Start local IPFS node.
-        const appPath = app.getAppPath()
-        const asarUnpackedPath = app.getAppPath().replace('app.asar', 'app.asar.unpacked')
-        let ipfsPath
-        if (electronIsDev) {
-            ipfsPath = path.join(appPath, `/vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs`)
-        } else {
-            ipfsPath = path.join(asarUnpackedPath, `/vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs`)
-        }
+        // const appPath = app.getAppPath()
+        const appPath = app.getAppPath().replace('app.asar', 'app.asar.unpacked')
+        const ipfsBinaryPath = path.join(appPath, `/vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs`)
+        // let ipfsPath
+        // if (electronIsDev) {
+        //     ipfsPath = path.join(appPath, `/vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs`)
+        // } else {
+        //     ipfsPath = path.join(asarUnpackedPath, `/vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs`)
+        // }
 
         console.log(`appPath`, app.getAppPath())
         console.log('execPath', process.execPath);
-        console.log(`ipfsPath`, ipfsPath);
+        console.log(`ipfsPath`, ipfsBinaryPath);
 
-        const ipfs = spawn(ipfsPath, [...`daemon --stream-channels --enable-namesys-pubsub --enable-gc --manage-fdlimit`.split(' ')]);
+        // The userData directory is like:
+        // macOS: ~/Library/Application Support/Dappnet/
+        // Linux: ~/.config/Dappnet
+        // Windows: %APPDATA%\Dappnet
+        const userDataDir = app.getPath('appData')
+        // Location of the ipfs data directory, which is ordinarily ~/.ipfs.
+        const IPFS_PATH = path.join(userDataDir, '/.ipfs/')
+        const IPFS_CONFIG_PATH = join(IPFS_PATH, '/config')
+        const env = { IPFS_PATH }
+        
+        console.log(`IPFS_PATH`, IPFS_PATH)
+        console.log(`IPFS_CONFIG_PATH`, IPFS_CONFIG_PATH)
 
-        ipfs.stdout.on('data', (data) => {
-            console.log(`[ipfs] ${data}`);
-        });
+        if (!existsSync(IPFS_CONFIG_PATH)) {
+            console.log(`IPFS: no config, initializing the node`)
 
-        ipfs.stderr.on('data', (data) => {
-            console.error(`[ipfs] ${data}`);
-        });
-
-        ipfs.on('close', (code) => {
-            if (code !== 0) {
-                console.log(`ipfs process exited with code ${code}`);
+            // Initialize IPFS, creating a config file.
+            spawnSync(ipfsBinaryPath, [`init`], { env, stdio: 'inherit' })
+            
+            // Sanity check it worked.
+            if (!existsSync(IPFS_CONFIG_PATH)) {
+                throw new Error("IPFS config was not generated after running `ipfs init`, meaning something went wrong.")
             }
-        });
+
+            // Now add custom peers (ie. Cloudflare) to make it fast.
+            // See: https://docs.ipfs.tech/how-to/peering-with-content-providers/#content-provider-list
+            // NOTE: `Peers` config option is NOT supported by the js-ipfs node.
+            const ipfsConfig = JSON.parse(readFileSync(IPFS_CONFIG_PATH, { encoding: "utf-8" }))
+            
+            let existingPeers = _.get(ipfsConfig, "Peering.Peers", [])
+            if(existingPeers == null) {
+                // FFS, why couldn't they just set this to an empty array?
+                existingPeers = []
+            }
+
+            const peers = 
+            _.set(
+                ipfsConfig,
+                "Peering.Peers",
+                [...existingPeers, ...ipfsConfigForFastTeens.Peering.Peers]
+            )
+
+            // Write out the new config.
+            writeFileSync(IPFS_CONFIG_PATH, JSON.stringify(ipfsConfig, null, 2))
+
+            console.log(`IPFS: initialization done`)
+        }
+
+        const run = (cmd, args) => {
+            const ipfs = spawn(
+                cmd,
+                args.split(' '),
+                { env, stdio: 'inherit' }
+            );
+
+            // ipfs.stdout.on('data', (data) => {
+            //     console.log(`[${cmd}] ${data}`);
+            // });
+
+            // ipfs.stderr.on('data', (data) => {
+            //     console.error(`[${cmd}] ${data}`);
+            // });
+
+            ipfs.on('close', (code) => {
+                if (code !== 0) {
+                    console.log(`[${cmd}] process exited with code ${code}`);
+                }
+            });
+        }
+
+        console.log(`IPFS: starting the daemon`)
+        run(ipfsBinaryPath, `daemon --stream-channels --enable-namesys-pubsub --enable-gc --manage-fdlimit`)
     }
 
     const enableLocalIpfsNode = false;

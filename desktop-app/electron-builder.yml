@@ -4,8 +4,8 @@ productName: Dappnet
 
 compression: store
 asarUnpack:
- - node_modules/@dappnet/local-gateway/
  - vendor/
+#  - node_modules/@dappnet/local-gateway/
 
 publish:
   provider: github
@@ -23,6 +23,7 @@ files:
   - ui/
   - node_modules/
   - ./vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs
+  - ./vendor/.ipfs
   # - vendor/ipfs/go-ipfs_v0.13.0_${platform}-${arch}/ipfs
 
 dmg:
@@ -38,16 +39,21 @@ dmg:
 mac:
   # entitlements: build/entitlements.mac.plist
   # entitlementsInherit: build/entitlements.mac.plist
+  electronLanguages: "en"
   target:
     - target: pkg
       arch:
       #  - x64 # arm64
-       - arm64
+       - x64
+    # - target: dmg
+    #   arch:
+    #   #  - x64 # arm64
+    #    - arm64
   
-  identity: null
+  # identity: null
 
   # Verify code signing.
-  gatekeeperAssess: true
+  # gatekeeperAssess: true
   
   # Edit Info.plist.
   # Source: https://github.com/electron/electron/blob/main/shell/browser/resources/mac/Info.plist
@@ -55,6 +61,7 @@ mac:
 
   # binaries Array<String> | “undefined” - Paths of any extra binaries that need to be signed.
   # binaries:
+  #  - ./vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs
   #  - /Users/liamz/Documents/Projects/dappnet/desktop-app/dist/mac-arm64/Dappnet.app/vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs
   #  - vendor/ipfs/go-ipfs_v0.13.0_${platform}-${arch}/ipfs
   #  - vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs
