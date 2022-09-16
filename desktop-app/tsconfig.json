@@ -5,7 +5,7 @@
     "esModuleInterop": true,
     "noImplicitAny": true,
     "allowJs": true,
-    "outDir": "build",
+    "outDir": "build/src",
     "baseUrl": ".",
     "inlineSourceMap": true,
     "inlineSources": true,

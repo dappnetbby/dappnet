@@ -13,12 +13,13 @@ publish:
   repo: dappnet
 
 directories:
-  buildResources: dist-assets/
+  buildResources: dist-resources/
   output: dist/
 
 files:
   - package.json
   - src/
+  - build/
   - ui/
   - node_modules/
   - ./vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs
@@ -38,12 +39,13 @@ mac:
   # entitlements: build/entitlements.mac.plist
   # entitlementsInherit: build/entitlements.mac.plist
   target:
-    - target: dmg
+    - target: pkg
       arch:
-       - x64 # arm64
-      #  - arm64
+      #  - x64 # arm64
+       - arm64
   
   identity: null
+
   # Verify code signing.
   gatekeeperAssess: true
   
@@ -58,6 +60,9 @@ mac:
   #  - vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs
 
   category: public.app-category.tools
+pkg:
+  scripts: ./pkg/mac/scripts/
+
 
 win:
   target: nsis

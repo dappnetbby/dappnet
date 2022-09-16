@@ -44,7 +44,7 @@ app.setLoginItemSettings({
 // This must be run 1st, before the app is started, otherwise we get the error:
 // (node:28931) UnhandledPromiseRejectionWarning: Error: protocol.registerSchemesAsPrivileged should be called before app is ready
 serve({
-    directory: __dirname + '/../ui/out/',
+    directory: __dirname + '/../../ui/out/',
 });
 
 app.whenReady().then(() => {
@@ -70,10 +70,16 @@ async function setupIpfs() {
         gatewayOptions.ipfsNodeURL = arguments_['ipfs-node'];
     } else {
         // Start local IPFS node.
-        const ipfsPath = electronIsDev ?
-            path.join(app.getAppPath(), `/vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs`).replace('app.asar', 'app.asar.unpacked') :
-            __dirname + `/../vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs`;
+        const appPath = app.getAppPath()
+        const asarUnpackedPath = app.getAppPath().replace('app.asar', 'app.asar.unpacked')
+        let ipfsPath
+        if (electronIsDev) {
+            ipfsPath = path.join(appPath, `/vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs`)
+        } else {
+            ipfsPath = path.join(asarUnpackedPath, `/vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs`)
+        }
 
+        console.log(`appPath`, app.getAppPath())
         console.log('execPath', process.execPath);
         console.log(`ipfsPath`, ipfsPath);
 
@@ -171,7 +177,7 @@ async function createWindow() {
     // Launch SOCKS5 proxy server.
     const socksServer = LocalSocksProxy.start();
 
-    if (electronIsDev) {
+    if (process.env.UI_DEV) {
         await mainWindow.loadURL('http://localhost:3000');
     } else {
         // Load static assets from `serve`.
