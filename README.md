@@ -2,6 +2,16 @@
 dappnet
 =======
 
+![image](https://user-images.githubusercontent.com/584141/190630673-3aea2cd3-0f41-46d3-a06a-84c1f7da3e1b.png)
+
+## Foreward.
+
+It's funny how life loops around. 10yrs ago, when I was ?15?, instead of drinking booze and having sex, I was being a nerd and interested in [building decentralized DNS](https://github.com/liamzebedee/D3NS).
+
+BitTorrent is the OG of P2P technology. And it's freaking usable - everyone I know knows how to download torrents. IPFS is so much harder, **even as developers** IPFS's API's are notoriously confusing.
+
+What happened if browsing the web was like one big torrent? If every website you visited was downloaded from a P2P swarm? And nothing could be censored. That's what Dappnet is. 
+
 ## What is the Dappnet?
 
 The Dappnet is a permissionless application network that can't be taken down. 
@@ -12,21 +22,16 @@ The Dappnet suite of tools allows you to access `.eth` dapps in your browser (Fi
 
 What else? **Dappnet is fast. Way faster than you think.**.
 
-## Foreward.
+## Install.
 
-It's funny how life loops around. 10yrs ago, when I was ?15?, instead of drinking booze and having sex, I was being a fucking nerd and interested in [building decentralized DNS](https://github.com/liamzebedee/D3NS).
+Currently supports macOS with Chrome/Firefox.
 
-BitTorrent is the OG of P2P technology. And it's freaking usable - everyone I know knows how to download torrents. IPFS is so much harder, **even as developers** IPFS's API's are notoriously confusing.
+[Install guide](https://gist.github.com/liamzebedee/b7f71f5006ffeb4580c64f8767568c59).
 
-What happened if browsing the web was like one big torrent? If every website you visited was downloaded from a P2P swarm? That's what Dappnet is. 
+## Learn more.
 
-## Design.
-
-- **browser extension**, compatible with Chrome/Firefox. Proxies .eth requests in-browser to a local SOCKS5 proxy server.
-- **local-socks5-proxy**: proxies requests to the local IPFS/ENS gateway.
-- **local-gateway**: looks up .eth domains, streams their content from multiple IPFS nodes. It dynamically generates HTTPS certificates in the background, for any .eth domain - since wildcard certificates are not available for non-standard TLD's like .eth. HTTPS is needed, otherwise dapps can't use libraries that use web sockets over TLS (wss://) due to mixed content policies of the browser. Has multiple layers of caching for DNSLink, ENS, and IPNS naming schemes.
-- **desktop-app**: Electron app that bundles the proxy+gateway into one application, that can be started/stopped. Comes with a slick UI for accessing different dapps. Electron's really useful here because all the software is written in Node/JS.
-- **.eth certificate authority**: a local certificate the user must install as the .eth root of trust.
+ - [DESIGN.md](./DESIGN.md) contains a breakdown of the software.
+ - [Making your own .eth website](https://gist.github.com/liamzebedee/53e355430941d9c79b7b5541298801db).
 
 ## Acknowledgements.
 
