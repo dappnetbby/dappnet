@@ -1,12 +1,12 @@
 const { config } = require('../common')
 const _ = require('lodash')
 
-const getOptionsPageURL = () => {
-	const manifest = chrome.runtime.getManifest()
-	const optionsPageFilename = manifest.options_ui.page
-	const url = chrome.runtime.getURL('/' + optionsPageFilename)
-	return url
-}
+// const getOptionsPageURL = () => {
+// 	const manifest = chrome.runtime.getManifest()
+// 	const optionsPageFilename = manifest.options_ui.page
+// 	const url = chrome.runtime.getURL('/' + optionsPageFilename)
+// 	return url
+// }
 
 chrome.proxy.onProxyError.addListener(function (details) {
 	console = chrome.extension.getBackgroundPage().console;
@@ -14,6 +14,45 @@ chrome.proxy.onProxyError.addListener(function (details) {
 	console.error(details.details)
 	console.error(details.error)
 })
+
+// const proxyPacScript = `
+// function FindProxyForURL(url, host) {
+// 	if (shExpMatch(host, '*.eth')) {
+// 		return "SOCKS5 ${config.socksProxy.host}:${config.socksProxy.port}";
+// 	}
+// 	return "DIRECT";
+// }`
+
+// chrome.proxy.settings.set(
+// 	{
+// 		value: {
+// 			mode: "pac_script",
+// 			pacScript: {
+// 				data: proxyPacScript
+// 			}
+// 		},
+// 		scope: "regular",
+// 	}, function() {}
+// )
+
+// Alternative idea I was brewing on:
+// If the user isn't able to install the Dappnet app, e.g. because their device is locked-down.
+// We can dynamically load them onto the gateway services (e.g. something.eth.link) in-browser,
+// using the extension's background page.
+
+// else if(featureFlag.cdn == CDN_GATEWAY) {
+// 	// const extensionURL = chrome.runtime.getURL('options.html')
+// 	const optionsPageURL = getOptionsPageURL()
+// 	const rng = +new Date
+// 	// const redirectUrl = `data:text/html,<html><body>Hello. Visit <a href='https://uniswap${rng}.eth'>uniswap.eth</a>`
+// 	const redirectUrl = `${optionsPageURL}/#/${parser.hostname}`
+// 	// const redirectUrl = `data:text/html,<script>window.location="${extensionView}"</script>`
+// 	return {
+// 		redirectUrl,
+// 	}
+// }
+
+
 
 // run script when a request is about to occur
 chrome.webRequest.onBeforeRequest.addListener(function (details) {
@@ -32,6 +71,13 @@ chrome.webRequest.onBeforeRequest.addListener(function (details) {
 			redirectUrl: url.toString()
 		}
 	}
+
+	// Check if the gateway is up.
+	// try {
+	// 	await fetch(`http://127.0.0.1:6801`)
+	// } catch(err) {
+	// 	console.debug(err)
+	// }
 
 	const host = url.hostname;
 
@@ -60,22 +106,6 @@ chrome.webRequest.onBeforeRequest.addListener(function (details) {
 
 	return;
 
-	// Alternative idea I was brewing on:
-	// If the user isn't able to install the Dappnet app, e.g. because their device is locked-down.
-	// We can dynamically load them onto the gateway services (e.g. something.eth.link) in-browser,
-	// using the extension's background page.
-
-	// else if(featureFlag.cdn == CDN_GATEWAY) {
-	// 	// const extensionURL = chrome.runtime.getURL('options.html')
-	// 	const optionsPageURL = getOptionsPageURL()
-	// 	const rng = +new Date
-	// 	// const redirectUrl = `data:text/html,<html><body>Hello. Visit <a href='https://uniswap${rng}.eth'>uniswap.eth</a>`
-	// 	const redirectUrl = `${optionsPageURL}/#/${parser.hostname}`
-	// 	// const redirectUrl = `data:text/html,<script>window.location="${extensionView}"</script>`
-	// 	return {
-	// 		redirectUrl,
-	// 	}
-	// }
 
 }, { urls: ["<all_urls>"] }, ["blocking"]);
 
@@ -122,7 +152,6 @@ chrome.runtime.onMessage.addListener(
 		messageHandlers[message.type]({ message, sender, sendResponse })
 	}
 );
-
 
 
 const tabStore = {}

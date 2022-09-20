@@ -216,7 +216,7 @@ async function resolveIPNS(ipfsHttpClient, ipnsPath) {
     let cached = ipnsCache.get(ipnsPath)
     if (cached) return cached
 
-    const ipfsPathRoot = await ipfsHttpClient.resolve(ipnsPath, { recursive: false })
+    const ipfsPathRoot = await ipfsHttpClient.resolve(ipnsPath, { recursive: true })
     console.log(ipfsPathRoot)
     const value = ipfsPathRoot
 

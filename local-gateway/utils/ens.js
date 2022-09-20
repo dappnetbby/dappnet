@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 
-const { resolveENS } = require('../src/ens')
+// http://cid.ipfs.tech.ipns.localhost:8080/#bafzaajaiaejcbnv5mskob2urbu3uldds35j4pt4ux7gsqzmfgnb6qpi3qnprtu6s
+
+const { resolveENS, resolveIPNS } = require('../src/ens')
 const bs58 = require('bs58')
 
 const { resolve: resolveDNSLink, DNSRcodeError } = require('@dnslink/js')
 const { wellknown } = require('dns-query')
+const IpfsHttpClient = require('ipfs-http-client')
 
 let _endpoints = null
 async function getDNSEndpoints() {
@@ -26,6 +29,14 @@ async function getContentHash(argv) {
         console.log(`null`)
         return
     }
+
+    if(codec == 'ipns-ns') {
+        const ipfsHttpClient = IpfsHttpClient.create('http://localhost:5001/api/v0')
+        const ipns = await resolveIPNS(ipfsHttpClient, `/ipns/${hash}`)
+        // base58btc - cidv0 - dag-pb - sha2-256~256~4A1A12452E10CDAE8E8CDAA2670581F4F6165375DE59EDC71C934CC4F2E71398)
+        console.log(ipns)
+    }
+
     let hashDecoded = bs58.decode(hash)
     console.log(`contentHash: ${contentHashHex.slice(2)}`)
     console.log(`codec: ${codec}`)

@@ -1,29 +1,29 @@
 {
-	"manifest_version": 2,
-	"name": "Dappnet",
-	"version": "0.1.1",
-	"description" : "Access .eth dapps that can't be taken down.",
-	"homepage_url": "https://freedom.eth",
-	"icons": {
-		"128": "../../icon-128.png"
-	},
-	"background": {
-		"scripts": [
-			"index.js"
-		],
-		"persistent": true
-	},
-	"browser_action": {
-		"default_icon": "../../icon-128.png",
-		"default_title": "dappnet",
-		"default_popup": "popup.html"
-	},
-	"permissions": [
-		"proxy", 
-		"tabs",
-		"activeTab",
-		"webRequest", 
-		"webRequestBlocking", 
-		"*://*/*"
-	]
+  "manifest_version": 2,
+  "name": "Dappnet",
+  "version": "0.1.6",
+  "description": "Access .eth dapps that can't be taken down.",
+  "homepage_url": "https://freedom.eth",
+  "icons": {
+    "128": "../../icon-128.png"
+  },
+  "background": {
+    "scripts": [
+      "index.js"
+    ],
+    "persistent": true
+  },
+  "browser_action": {
+    "default_icon": "../../icon-128.png",
+    "default_title": "dappnet",
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "proxy",
+    "tabs",
+    "activeTab",
+    "webRequest",
+    "webRequestBlocking",
+    "*://*/*"
+  ]
 }

@@ -1,0 +1,120 @@
+dappnet secret alpha
+https://gist.github.com/liamzebedee/b7f71f5006ffeb4580c64f8767568c59
+
+making your own .eth site
+https://gist.github.com/liamzebedee/53e355430941d9c79b7b5541298801db
+
+websaves
+https://docs.google.com/document/d/16QQIG5Cu_Fu1PqdgnmZvDq6rxrOeW9OCMYoE_mcDSPk/edit
+
+
+**Second idea**
+
+Something like google docs but more lightweight for code
+
+
+
+
+**The idea:**
+
+You know, one of the things I love about the web is its substance.
+Sometimes I come across _really_ good pieces of writing. And they're so good, I save them. Because I know it's possible they'll disappear. 
+Some examples of this - Kain, Paul Graham's essays, Arthur from 0x, Cobie, Jacob from Zora, etc.
+
+The problem is that the web just breaks, all the goddamn time. 
+What if it didn't? What if you could actually make a website that doesn't break? 
+Curation is the act of giving people context.
+Curation is ruined when the details get lost.
+
+Let's fix that.
+
+Here's what I imagine - it's a way to save essays/webpages to IPFS using just one user action (equivalent to ctrl+s)
+and then on top of that - a really easy way to link them on your website
+
+    e.g. linking to https://cobie.substack.com/p/trading-the-metagame is as simple as mirror.yourblog.eth/cobie.substack.com/p/trading-the-metagame
+    hell maybe it's automatically rewritten in HTML?
+
+
+For the writer: 
+- open gliss
+- start editing a page on your .eth website - "/cool-essays.md"
+- insert link to cobie
+    [Trading the Metagame](https://cobie.substack.com/p/trading-the-metagame)
+- hit save
+
+For the reader:
+- visit liamz.eth/cool-essays.md
+- see "Trading the Metagame", click it
+- page loads from IPFS instead of HTTP
+
+In the background:
+- we fetch the page and save it to the filesystem. It is unpacked format - ie. not a single file like .mhtml, but with all the assets in different folders etc. (e.g. /static/images, /index.html)
+- we refer to this as a "websave" 
+    websave:
+        unique key = /archiver/time/url
+        time: Time
+        url: URL
+        archiver: User
+- the websave is added to IPFS.
+    because we are not an .mhtml, any duplicate resources from multiple mirrors will only be stored as a single IPFS object.
+    e.g. react.js loaded from CDN's will have a single universal IPFS object
+
+    because it's IPFS, the hash/signature are automatically done for us. 
+
+
+Other considerations:
+- websites may break due to using services that rely on JS etc. In this case, people can write scripts to "patch" them so they work again - like Greasemonkey, people can write scripts for specific websaves in order to fix the content inside of them.
+- how do we render SPA apps? In the browser, naturally.
+
+
+
+
+
+What does that UX look like?
+What's the best design?
+
+https://en.wikipedia.org/wiki/Hyperlink#Anchor_links
+permalinks
+
+
+html markup language
+maybe a layer that allows you to save content you read?
+
+
+
+- <a href="https://cobie.substack.com/p/trading-the-metagame" className='dappnet'>essay</a>
+- <a href="https://cobie.substack.com/p/trading-the-metagame" ipfs-href='123132123123123123123123213'>essay</a>
+- <a href="https://archives.eth/IPNS key/20201232322/cobie.substack.com/p/trading-the-metagame" ipfs-href='123132123123123123123123213'>essay</a>
+- <a href="https://liamz.eth/archives/www.com/12312312">
+- browser intercepts web requests. But where do they go? 
+
+
+
+
+
+
+
+
+
+
+
+extension
+
+    show past versions of site in IPFS
+
+    show directory listings
+    https://dweb.link/api/v0/ls?arg=QmdkygmhzA3bskQEFgYSDVRET9XFzaR6kT9NvLK49cTzeH
+
+
+
+a google drive for memes
+    your directory layout is just metadata
+    the content is stored once and distributed around the world
+    very easy
+    could be used for say - giphy.
+
+
+integrate other naming systems?
+    https://nns.xyz/about
+
+

@@ -2,3 +2,5 @@ cdn-node-cloudflare
 cli
 nexsteps
 undisclosed/
+media/
+!cli/deploy

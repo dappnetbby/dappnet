@@ -32,37 +32,22 @@ async function getCurrentTab() {
 // }
 
 export function Popup() {
-    // const [state, setState] = useState(tabStore)
     const [currentTab, setCurrentTab] = useState(null)
     const [tabData, setTabData] = useState(null)
-    
 
     async function run() {
         const tab = await getCurrentTab()
         console.log(`tab`, tab)
         if(!tab) return
+
+        // Now get the tab data.
+        // fetch(`http://127.0.0.1:10422/${url.pathname}`
+
         setCurrentTab(tab)
     }
 
     useEffect(() => {
         run()
-
-        // chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
-        //     console.debug(`message`, message.type, message)
-        //     await messageHandlers[message.type]({
-        //         message,
-        //         sender,
-        //         sendResponse
-        //     })
-        //     console.log(`tabStore`, tabStore)
-        //     setState(tabStore)
-        // })
-
-        // chrome.tabs.onActivated.addListener(async activeInfo => {
-        // })
-
-        // chrome.tabs.onUpdated.addListener(async (tabId, change, tab2) => {
-        // })
     }, [])
 
     
@@ -94,7 +79,8 @@ export function Popup() {
 
     console.log(`currentTab`, currentTab)
     // console.log(`tabData`, tabData)
-    if (!currentTab) return <></>
+    if (!currentTab) 
+        return <Toast body={<div/>} />
 
     let ipfsData
     if (tabData) {
@@ -131,17 +117,22 @@ export function Popup() {
     let body = 'Connected to the dappnet.'
     if(ipfsData) body = ipfsData
 
-    return <div>
-        <div className="toast fade show" role="alert" aria-live="assertive" aria-atomic="true">
-            <div className="toast-header">
-                <svg className="bd-placeholder-img rounded me-2" width="20" height="20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid slice" focusable="false"><rect width="100%" height="100%" fill="#007aff"></rect></svg>
-                <strong className="me-auto">Dappnet</strong>
-                {/* <small>last synced 11 mins ago</small> */}
-                {/* <button type="button" onClick={window.close} className="btn-close" data-bs-dismiss="toast" aria-label="Close"></button> */}
-            </div>
-            <div className="toast-body">
-                {body}
-            </div>
+    
+    return <Toast body={body}/>
+
+}
+
+const Toast = ({ body }) => {
+    return <div className="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+        <div className="toast-header">
+            {/* <svg className="bd-placeholder-img rounded me-2" width="20" height="20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid slice" focusable="false"><rect width="100%" height="100%" fill="#007aff"></rect></svg> */}
+            {/* <img src="../../../icon-128.png" width={20} height={20} /> */}
+            <strong className="me-auto">Dappnet</strong>
+            {/* <small>last synced 11 mins ago</small> */}
+            {/* <button type="button" onClick={window.close} className="btn-close" data-bs-dismiss="toast" aria-label="Close"></button> */}
+        </div>
+        <div className="toast-body">
+            {body}
         </div>
     </div>
 }
