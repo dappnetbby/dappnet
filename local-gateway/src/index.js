@@ -76,28 +76,26 @@ function start(opts = {
     getDNSEndpoints()
     testENS()
 
-    // resolveENS('uniswap.eth')
-
-    let ipfsGateways = [
-        // 'https://cloudflare-ipfs.com',
-        'https://ipfs.fleek.co',
-        'https://ipfs.io'
-        // 'https://ipfs.eth.limo'
-    ]
+    // let ipfsGateways = [
+    //     // 'https://cloudflare-ipfs.com',
+    //     'https://ipfs.fleek.co',
+    //     'https://ipfs.io'
+    //     // 'https://ipfs.eth.limo'
+    // ]
+    //
+    // if (opts.ipfsNodeUrl) {
+    //     ipfsGateways = [opts.ipfsNodeUrl, ...ipfsGateways]
+    // }
+    // 
+    // let ensGateways = [
+    //     (name) => `https://${name}.eth.limo`
+    // ]
 
     const getIpfsGateway = () => {
         // NOTE: If the host below is specified as localhost, the ipfs-node software will
         // perform a 301 redirect to baf_ENCODED_HASH.ipfs.localhost. We don't want this,
         // since node-fetch can't handle it.
         return 'http://127.0.0.1:8080'
-    }
-
-    let ensGateways = [
-        (name) => `https://${name}.eth.limo`
-    ]
-
-    if (opts.ipfsNodeUrl) {
-        ipfsGateways = [opts.ipfsNodeUrl, ...ipfsGateways]
     }
 
     // The local gateway receives requests on /*.
@@ -232,7 +230,10 @@ function start(opts = {
         const gatewayRewrite = `${getIpfsGateway()}${ipfsPath}`
 
         console.log(req.hostname, gatewayRewrite)
-        let gatewayRes = await fetch(gatewayRewrite)
+        let gatewayRes = await fetch(
+            gatewayRewrite,
+            { highWaterMark: 5 * 1024 * 1024 }
+        )
 
         // TODO: make this smart later.
         const headers = `Accept-Ranges Content-Length Content-Type X-Ipfs-Path X-Ipfs-Roots Date`.split(' ')
@@ -299,6 +300,25 @@ function start(opts = {
     preload('tornadocash.eth')
     preload('rollerskating.eth')
     preload('liamz.eth')
+
+
+
+    const apiServer = express();
+    apiServer.get('/v0/url-info', async (req, res) => {
+        const url = req.params['url']
+        console.log(`url-info`, `url`, url)
+
+        // Lookup from cache.
+        // const res = fetch(`http://127.0.0.1:10422/${url.pathname}`, {
+        //     headers: {
+        //         'Host': url.hostname
+        //     }
+        // })
+        // Return IPFS headers.
+
+    })
+
+
 }
 
 function preload(ensName) {
