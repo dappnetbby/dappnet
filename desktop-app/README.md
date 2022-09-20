@@ -3,52 +3,61 @@ desktop-app
 
 The Dappnet app for macOS.
 
-Built using Electron. The UI is rendered using Next.js in `ui/`.
+## Setup.
 
-## Build.
+### Local IPFS node.
+
+The desktop app bundles a local IPFS node, which you will have to download the binary for.
 
 ```sh
-npm i
+wget https://dist.ipfs.tech/go-ipfs/v0.13.0/go-ipfs_v0.13.0_darwin-amd64.tar.gz
+tar -xzf go-ipfs_v0.13.0_darwin-amd64.tar.gz
+chmod +x go-ipfs/ipfs
 
-# Term 1:
-npm run watch
-
-# Term 2:
-npm run start
-
-# The UI is a separate server.
-# If you want to dev on that:
-# Term 3:
-cd ui/
-npm i
-npm run start
-
-# and run in Term 2:
-UI_DEV=1 npm run start
+# TODO rewrite to code
+move go-ipfs/* into ./vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/
 ```
 
-You can use the statically built frontend in `ui/out/` by adding the `ELECTRON_IS_DEV=0` flag, to mock that we are running as a packaged app environment.
+### UI.
 
-### Using your own IPFS node.
+The UI is developed using Next.js/React in a separate folder - `ui/`. 
 
-You can run your own IPFS node locally, and use it with Dappnet!
+Compile these assets once, so the Electron app can use them:
 
 ```sh
-# Development
-ELECTRON_IS_DEV=0 npm run start -- --ipfs-node http://localhost:8080
+cd ui/
+npm i 
+npm run build
+npm run export
+```
 
-# Packaged
-./dist/mac-arm64/Dappnet.app/Contents/MacOS/Dappnet --ipfs-node http://localhost:8080
+### Certificate authority.
+
+If you haven't already installed it, you will need to add the .eth CA to your System Keychain.
+
+```sh
+./Users/liamz/Documents/Projects/dappnet/desktop-app/scripts/mac/add-ca.sh
+```
+
+## Develop.
+
+Once you've done setup, development is as simple as this:
+
+```sh
+npm i
+
+# Term 1: TypeScript server.
+npm run watch
+
+# Term 2: Electron app launcher.
+npm run start
 ```
 
 ## Publish.
 
+Publishing will build a .pkg installer for macOS, that auto-installs the CA.
+
 ```sh
 npm run pack
-
-ELECTRON_ENABLE_LOGGING=true
-
-# macOS
-./dist/mac-arm64/Dappnet.app/Contents/MacOS/Dappnet
 ```
 

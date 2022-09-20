@@ -283,8 +283,15 @@ function start(opts = {
         SNICallback: sniCallback,
     }, app);
 
-    httpsServer.listen(PROXY_PORT_HTTPS, () => {
+    httpsServer.listen(PROXY_PORT_HTTPS, async () => {
         console.log(`Proxy server listening on https://localhost:${PROXY_PORT_HTTPS}`)
+
+        await preload('app.ens.eth')
+        await preload('uniswap.eth')
+        await preload('tornadocash.eth')
+        await preload('vitalik.eth')
+        await preload('rollerskating.eth')
+        await preload('liamz.eth')
     })
 
     // HTTP.
@@ -292,16 +299,6 @@ function start(opts = {
     httpServer.listen(PROXY_PORT_HTTP, () => {
         console.log(`Proxy server listening on http://localhost:${PROXY_PORT_HTTP}`)
     })
-
-
-
-    preload('app.ens.eth')
-    preload('uniswap.eth')
-    preload('tornadocash.eth')
-    preload('rollerskating.eth')
-    preload('liamz.eth')
-
-
 
     const apiServer = express();
     apiServer.get('/v0/url-info', async (req, res) => {

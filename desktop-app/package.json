@@ -1,6 +1,6 @@
 {
   "name": "@dappnet/desktop-app",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "__",
   "main": "build/src/index.js",
   "scripts": {
@@ -9,8 +9,6 @@
     "start": "electron .",
     "pack": "sudo rm -rf dist/mac-arm64 && electron-builder",
     "pack:testing": "electron-builder -c.compression=store --dir --mac --arm64",
-    "pack2": "electron-builder --linux",
-    "dist": "electron-builder",
     "lint": "eslint --fix src/"
   },
   "keywords": [],
