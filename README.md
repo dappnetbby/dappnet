@@ -17,12 +17,19 @@ What else? **Dappnet is fast. Way faster than you think.**.
 
 Currently supports macOS with Chrome/Firefox.
 
-[Install guide](https://gist.github.com/liamzebedee/b7f71f5006ffeb4580c64f8767568c59).
+Follow the [install guide](https://gist.github.com/liamzebedee/b7f71f5006ffeb4580c64f8767568c59).
 
 ## Learn more.
 
- - [DESIGN.md](./DESIGN.md) contains a breakdown of the software.
- - [Making your own .eth website](https://gist.github.com/liamzebedee/53e355430941d9c79b7b5541298801db).
+ - [Dappnet's architecture](./DESIGN.md).
+ - [How to publish a dapp/website to .eth](https://gist.github.com/liamzebedee/53e355430941d9c79b7b5541298801db).
+
+## Tools.
+
+Some useful tools for hackers:
+
+ - [ipfs-tools](./ipfs-tools/) - helper for deploying websites to remote IPFS nodes, updating the IPNS name automatically.
+ - [local-gateway/utils/ens.js](./local-gateway/utils/ens.js) - helper for ENS resolution (shows DNSLink, IPFS, IPNS).
 
 ## Acknowledgements.
 
