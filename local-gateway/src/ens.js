@@ -85,18 +85,17 @@ async function resolveENS(name) {
     let cached = ensCache.get(name)
     if(cached) return cached
 
-    console.time(`provider.getResolver(${name})`)
+    console.time(`ens.getResolver(${name})`)
     const resolver = await provider.getResolver(name)
     if (!resolver) {
         throw new Error(`ENS name doesn't exist: ${name}`)
     }
-    console.timeEnd(`provider.getResolver(${name})`)
+    console.timeEnd(`ens.getResolver(${name})`)
 
-    console.time(`resolver._fetchBytes(${name})`)
+    console.time(`resolver.getContentHash(${name})`)
     // let hash = await resolver.getContentHash()
     const contentHashHex = await resolver._fetchBytes("0xbc1c58d1");
-    console.log(contentHashHex)
-    console.timeEnd(`resolver._fetchBytes(${name})`)
+    console.timeEnd(`resolver.getContentHash(${name})`)
     if (contentHashHex == '0x') return {
         codec: null,
         hash: null
@@ -217,7 +216,7 @@ async function resolveIPNS(ipfsHttpClient, ipnsPath) {
     if (cached) return cached
 
     const ipfsPathRoot = await ipfsHttpClient.resolve(ipnsPath, { recursive: true })
-    console.log(ipfsPathRoot)
+    // console.log(ipfsPathRoot)
     const value = ipfsPathRoot
 
     // Insert into cache.

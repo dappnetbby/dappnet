@@ -32,9 +32,8 @@ async function getContentHash(argv) {
 
     if(codec == 'ipns-ns') {
         const ipfsHttpClient = IpfsHttpClient.create('http://localhost:5001/api/v0')
-        const ipns = await resolveIPNS(ipfsHttpClient, `/ipns/${hash}`)
-        // base58btc - cidv0 - dag-pb - sha2-256~256~4A1A12452E10CDAE8E8CDAA2670581F4F6165375DE59EDC71C934CC4F2E71398)
-        console.log(ipns)
+        const ipnsPath = await resolveIPNS(ipfsHttpClient, `/ipns/${hash}`)
+        console.log(`ipnsPath:`, ipnsPath)
     }
 
     let hashDecoded = bs58.decode(hash)
