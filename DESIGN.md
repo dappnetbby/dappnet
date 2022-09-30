@@ -18,6 +18,15 @@ In terms of architecture, these are the following layers:
  - **A web browser**. Web browsers provide us the application platform to run apps, using HTML, CSS and JS.
  - **Decentralized and centralized backends**. Applications use a mixture of decentralized backends (blockchains, indexers like [The Graph](https://thegraph.com/en/)) and centralized backends (e.g. [Zora's API](https://api.zora.co/), [Farcaster Hubs](https://github.com/farcasterxyz/protocol)) to provide the database and backend API's.
 
+## How do I publish?
+
+ 1. Buy a .eth domain on [ENS](https://app.ens.domains/).
+ 2. Generate an IPNS (IPFS Naming System) keypair. This is your keypair you use to publish.
+    
+    e.g. `/ipns/12D3KooWBC7KN4WoiFPYXhd22wFa2daSTkkTAeDcEDQfxBDHY3tP`.
+ 3. Set the content hash for your domain to your IPNS keypair.
+ 4. Publish content to your IPNS.
+
 ## Overview.
 
 Dappnet is composed of multiple pieces:
