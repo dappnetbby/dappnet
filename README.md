@@ -5,9 +5,9 @@ dappnet
 
 ## What is Dappnet?
 
-Dappnet is a portal to decentralized frontends. Using Dappnet, anyone can publish a dapp/website under their .eth domain, and users can access it **seamlessly** using their browser. All content is hosted on IPFS, and there is no dependence on centralized gateways (.eth.limo, .eth.link) or servers.
+Dappnet is a portal to decentralized frontends. Using Dappnet, anyone can publish a dapp/website under their .eth domain, and users can access it **seamlessly** using their browser - just type `uniswap.eth`. All content is hosted on IPFS, and there is no dependence on centralized gateways (.eth.limo, .eth.link) or servers.
 
-The software consists of a desktop app, which bundles a local IPFS node, local ENS gateway, and some other good stuff, and a browser extension - making it possible to access `uniswap.eth` natively in the browser (no weird looking URL's).
+The software consists of a desktop app, which bundles a local IPFS node, local ENS gateway, and [some other good stuff](./DESIGN.md), and a browser extension. All of this complexity is hidden from the user - [check out the demo vid to see](https://i.imgur.com/EWdEqeZ.mp4).
 
 ## Install.
 
