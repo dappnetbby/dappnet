@@ -8,8 +8,6 @@ import electronIsDev from 'electron-is-dev';
 import serve from 'electron-serve';
 import * as IPFSHttpClient from 'ipfs-http-client';
 
-import {setupMainProcessIPC} from './ipc-main';
-
 import * as LocalGateway from '@dappnet/local-gateway';
 import * as LocalSocksProxy from '@dappnet/local-socks5-proxy';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -206,8 +204,6 @@ async function setupIpfs() {
 }
 
 async function createWindow() {
-    setupMainProcessIPC();
-
     // const appIcon = new Tray(__dirname + '/../build/icon.png')
     // const icon = nativeImage.createFromPath(__dirname + '/../build/icon.icns')
     const mainWindow = new BrowserWindow({

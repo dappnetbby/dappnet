@@ -290,8 +290,8 @@ function start(opts = {
         await preload('uniswap.eth')
         await preload('tornadocash.eth')
         await preload('vitalik.eth')
-        await preload('rollerskating.eth')
-        await preload('liamz.eth')
+        // await preload('rollerskating.eth')
+        // await preload('liamz.eth')
     })
 
     // HTTP.

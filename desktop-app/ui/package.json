@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "next",
-    "build": "next build && next export"
+    "build": "next build && next export",
+    "dev": "next dev"
   },
   "keywords": [],
   "author": "",

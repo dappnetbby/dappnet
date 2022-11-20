@@ -10,12 +10,12 @@ The Dappnet app for macOS.
 The desktop app bundles a local IPFS node, which you will have to download the binary for.
 
 ```sh
+cd vendor/
 wget https://dist.ipfs.tech/go-ipfs/v0.13.0/go-ipfs_v0.13.0_darwin-amd64.tar.gz
-tar -xzf go-ipfs_v0.13.0_darwin-amd64.tar.gz
+tar -xvzf go-ipfs_v0.13.0_darwin-amd64.tar.gz
 chmod +x go-ipfs/ipfs
-
-# TODO rewrite to code
-move go-ipfs/* into ./vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/
+mkdir -p ./ipfs/go-ipfs_v0.13.0_darwin-amd64/
+mv go-ipfs/ipfs ./ipfs/go-ipfs_v0.13.0_darwin-amd64/
 ```
 
 ### UI.

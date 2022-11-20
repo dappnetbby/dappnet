@@ -1,0 +1,9 @@
+{
+  "plugins": [
+  ],
+  "extends": [
+    "plugin:@next/next/recommended"
+  ],
+  "rules": {
+  }
+}
