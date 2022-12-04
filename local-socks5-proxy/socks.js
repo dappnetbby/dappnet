@@ -85,7 +85,7 @@ var net = require('net'),
 function createSocksServer(cb, userpass) {
     // record userpass 
     USERPASS = userpass;
-    console.log('userpass:'+JSON.stringify(userpass));
+    // console.log('userpass:'+JSON.stringify(userpass));
 
     var socksServer = net.createServer();
     socksServer.on('listening', function() {

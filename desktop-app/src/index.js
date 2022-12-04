@@ -15,9 +15,92 @@ import { join } from 'node:path';
 import * as _ from 'lodash'
 import { ipfsConfigForFastTeens } from './ipfs';
 import * as yargs from 'yargs'
+import { autoUpdater } from 'electron';
+import { app } from 'electron'
 
-// Configure auto-updates.
-// const { autoUpdater } = require("electron-updater")
+
+
+// Print a banner on startup.
+function smashIt() {
+    console.log(`dappnet v${app.getVersion()}`)
+    console.log(`Do what you think is based work.`)
+    console.log(``)
+    console.log(``)
+}
+smashIt()
+
+
+// 
+// Configure automatic updates.
+// 
+
+// What are we updating initially? 
+// It's just Mac's with amd64 arch.
+// We don't care about signing.
+
+
+function configureAutomaticUpdates() {
+    // const repo = 'liamzebedee/dappnet'
+    const updateServerBase = 'https://dappnet-update-server-pi.vercel.app'
+    // darwin_arm64
+    const updateServerUrl = `${updateServerBase}/update/${process.platform}/${app.getVersion()}`
+
+    console.log(`updateServerUrl: ${updateServerUrl}`)
+
+    // if (app.isPackaged) {
+    // }
+
+    autoUpdater.setFeedURL({
+        // url: "file:///Users/liamz/Documents/Projects/dappnet/desktop-app/test/auto-update/update.json"
+        url: updateServerUrl
+    })
+
+    autoUpdater.checkForUpdates()
+
+    // setInterval(() => {
+    //     autoUpdater.checkForUpdates()
+    // }, 5000)
+
+    const log = console.log
+    autoUpdater.on('error', function () {
+        console.log(arguments)
+    })
+
+    autoUpdater.on('error', err => {
+        log('updater error')
+        log(err)
+    })
+
+    autoUpdater.on('checking-for-update', () => {
+        log('checking-for-update')
+    })
+
+    autoUpdater.on('update-available', () => {
+        log('update-available; downloading...')
+    })
+
+    autoUpdater.on('update-not-available', () => {
+        log('update-not-available')
+    })
+
+    autoUpdater.on('update-downloaded', (event, releaseNotes, releaseName) => {
+        const dialogOpts = {
+            type: 'info',
+            buttons: ['Restart', 'Later'],
+            title: 'Application Update',
+            message: process.platform === 'win32' ? releaseNotes : releaseName,
+            detail:
+                'A new version has been downloaded. Restart the application to apply the updates.',
+        }
+
+        dialog.showMessageBox(dialogOpts).then((returnValue) => {
+            if (returnValue.response === 0) autoUpdater.quitAndInstall()
+        })
+    })
+}
+
+configureAutomaticUpdates()
+
 
 // Parse arguments.
 console.log(process.argv);
@@ -47,7 +130,7 @@ serve({
 });
 
 app.whenReady().then(() => {
-    createWindow();
+    // createWindow();
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {

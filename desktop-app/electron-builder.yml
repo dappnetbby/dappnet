@@ -5,12 +5,11 @@ productName: Dappnet
 compression: store
 asarUnpack:
  - vendor/
-#  - node_modules/@dappnet/local-gateway/
 
 publish:
   provider: github
   owner: gliss-co
-  repo: dappnet
+  repo: undisclosed
 
 directories:
   buildResources: dist-resources/
@@ -22,8 +21,9 @@ files:
   - build/
   - ui/
   - node_modules/
-  - ./vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs
-  - ./vendor/.ipfs
+  - vendor/
+  # - ./vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs
+  # - ./vendor/.ipfs
   # - vendor/ipfs/go-ipfs_v0.13.0_${platform}-${arch}/ipfs
 
 dmg:
@@ -40,28 +40,31 @@ mac:
   # entitlements: build/entitlements.mac.plist
   # entitlementsInherit: build/entitlements.mac.plist
   electronLanguages: "en"
+  
   target:
+    # Only .pkg target is supported, since we use the pkg-installer script to install the root CA.
     - target: pkg
       arch:
-      #  - x64 # arm64
        - x64
-    # - target: dmg
-    #   arch:
-    #   #  - x64 # arm64
-    #    - arm64
-  
+    - target: dmg
+      arch:
+       - x64
+    - target: zip
+      arch:
+       - x64
+
   # identity: null
 
   # Verify code signing.
-  # gatekeeperAssess: true
+  gatekeeperAssess: true
   
   # Edit Info.plist.
   # Source: https://github.com/electron/electron/blob/main/shell/browser/resources/mac/Info.plist
   # extendInfo:
 
   # binaries Array<String> | “undefined” - Paths of any extra binaries that need to be signed.
-  # binaries:
-  #  - ./vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs
+  binaries:
+   - vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs
   #  - /Users/liamz/Documents/Projects/dappnet/desktop-app/dist/mac-arm64/Dappnet.app/vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs
   #  - vendor/ipfs/go-ipfs_v0.13.0_${platform}-${arch}/ipfs
   #  - vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs
