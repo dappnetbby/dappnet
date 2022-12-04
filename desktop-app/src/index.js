@@ -15,13 +15,40 @@ import { join } from 'node:path';
 import * as _ from 'lodash'
 import { ipfsConfigForFastTeens } from './ipfs';
 import * as yargs from 'yargs'
-import { autoUpdater } from 'electron';
+import { dialog, autoUpdater } from 'electron';
 import { app } from 'electron'
 import { xor } from 'lodash';
 
 
+// require('yargs')
+//     .scriptName("dappnet")
+//     .usage('$0 <cmd> [args]')
+//     .command('deploy', 'deploy the dir', (yargs) => {
+//         yargs
+//             .option('dir', {
+//                 type: 'string',
+//                 describe: 'the directory to publish'
+//             })
+//             .option('ipfs-node', {
+//                 type: 'string',
+//                 describe: 'the URL to the IPFS node we are using to publish.',
+//                 default: "http://localhost:5001/api/v0"
+//             })
+//             .option('ipns', {
+//                 type: 'string',
+//                 describe: 'Update an IPNS name. The private key should be set in the environment variable, DAPPNET_IPNS_KEY.'
+//             })
+//             .demandOption(['dir', 'ipns'], '')
+//     }, deploy)
+//     .help()
+//     .argv
 
+
+
+// 
 // Print a banner on startup.
+// 
+
 function smashIt() {
     console.log(`dappnet v${app.getVersion()}`)
     console.log(`Do what you think is based work.`)
@@ -35,19 +62,11 @@ smashIt()
 // Configure automatic updates.
 //
 
-
-
-
-// Fetch the updates from a file hosted on git.
-
 function configureAutomaticUpdates() {
     const repo = 'liamzebedee/dappnet'
     const updateServerBase = 'https://dappnet-update-server-pi.vercel.app'
     const updateServerUrl = `${updateServerBase}/update/${process.platform}/${app.getVersion()}`
     // const updateManifestLocation = 'https://raw.githubusercontent.com/gliss-co/undisclosed/master/___________'
-
-    console.log(`updateServerUrl: ${updateServerUrl}`)
-
     // {"name":"v1.2.2","notes":"","pub_date":"2022-12-04T02:28:16Z","url":"https://dappnet-update-server-gszxsxhhl-liamzebedee.vercel.app/download/darwin?update=true"}
     // const update = {
     //     "name": "v1.2.2",
@@ -59,7 +78,7 @@ function configureAutomaticUpdates() {
     // What makes up a release?
     // (os=[darwin], arch=[amd64, arm64], version=[*])
 
-    // How do we work this? 
+    // How do we work this?
     // Releases are signed by a private keypair.
     // The public key is embedded on-chain.
 
@@ -67,22 +86,20 @@ function configureAutomaticUpdates() {
     // 2. Publish the release on BitTorrent/IPFS.
     // 3. Update the latest release manifest.
 
+    console.log(`updateServerUrl: ${updateServerUrl}`)
 
+    if (app.isPackaged) {
+        autoUpdater.setFeedURL({
+            // url: "file:///Users/liamz/Documents/Projects/dappnet/desktop-app/test/auto-update/update.json"
+            url: updateServerUrl
+        })
 
-    // if (app.isPackaged) {
-    // }
+        autoUpdater.checkForUpdates()
 
-    autoUpdater.setFeedURL({
-        // url: "file:///Users/liamz/Documents/Projects/dappnet/desktop-app/test/auto-update/update.json"
-        url: updateServerUrl
-    })
-
-    autoUpdater.checkForUpdates()
-
-
-    // setInterval(() => {
-    //     autoUpdater.checkForUpdates()
-    // }, 5000)
+        setInterval(() => {
+            autoUpdater.checkForUpdates()
+        }, 30000)
+    }
 
     const log = console.log
     autoUpdater.on('error', function () {
@@ -104,6 +121,10 @@ function configureAutomaticUpdates() {
 
     autoUpdater.on('update-not-available', () => {
         log('update-not-available')
+    })
+
+    autoUpdater.on('download-progress', (ev, progressObj) => {
+        log('download-progress', `${progressObj.percent}%`)
     })
 
     autoUpdater.on('update-downloaded', (event, releaseNotes, releaseName) => {

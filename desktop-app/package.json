@@ -40,6 +40,6 @@
     "simple-args-parser": "^1.0.1",
     "source-map-support": "^0.5.21",
     "update-electron-app": "^2.0.1",
-    "yargs": "^17.5.1"
+    "yargs": "^17.6.2"
   }
 }
