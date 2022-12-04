@@ -17,6 +17,7 @@ import { ipfsConfigForFastTeens } from './ipfs';
 import * as yargs from 'yargs'
 import { autoUpdater } from 'electron';
 import { app } from 'electron'
+import { xor } from 'lodash';
 
 
 
@@ -32,20 +33,41 @@ smashIt()
 
 // 
 // Configure automatic updates.
-// 
+//
 
-// What are we updating initially? 
-// It's just Mac's with amd64 arch.
-// We don't care about signing.
 
+
+
+// Fetch the updates from a file hosted on git.
 
 function configureAutomaticUpdates() {
-    // const repo = 'liamzebedee/dappnet'
+    const repo = 'liamzebedee/dappnet'
     const updateServerBase = 'https://dappnet-update-server-pi.vercel.app'
-    // darwin_arm64
     const updateServerUrl = `${updateServerBase}/update/${process.platform}/${app.getVersion()}`
+    // const updateManifestLocation = 'https://raw.githubusercontent.com/gliss-co/undisclosed/master/___________'
 
     console.log(`updateServerUrl: ${updateServerUrl}`)
+
+    // {"name":"v1.2.2","notes":"","pub_date":"2022-12-04T02:28:16Z","url":"https://dappnet-update-server-gszxsxhhl-liamzebedee.vercel.app/download/darwin?update=true"}
+    // const update = {
+    //     "name": "v1.2.2",
+    //     "notes": "",
+    //     "pub_date": "2022-12-04T02:28:16Z",
+    //     "url": ""
+    // }
+
+    // What makes up a release?
+    // (os=[darwin], arch=[amd64, arm64], version=[*])
+
+    // How do we work this? 
+    // Releases are signed by a private keypair.
+    // The public key is embedded on-chain.
+
+    // 1. Publish the release on a CDN.
+    // 2. Publish the release on BitTorrent/IPFS.
+    // 3. Update the latest release manifest.
+
+
 
     // if (app.isPackaged) {
     // }
@@ -56,6 +78,7 @@ function configureAutomaticUpdates() {
     })
 
     autoUpdater.checkForUpdates()
+
 
     // setInterval(() => {
     //     autoUpdater.checkForUpdates()

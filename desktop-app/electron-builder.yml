@@ -10,8 +10,8 @@ afterSign: scripts/notarize.js
 
 publish:
   provider: github
-  owner: gliss-co
-  repo: undisclosed
+  owner: liamzebedee
+  repo: test1717
 
 directories:
   buildResources: dist-resources/
@@ -54,15 +54,13 @@ mac:
     - target: pkg
       arch:
        - x64
+    # However, .dmg/.zip is the only supported update format for Squirrel.
     - target: dmg
       arch:
        - x64
     - target: zip
       arch:
        - x64
-
-  # identity: null
-
   
   # Edit Info.plist.
   # Source: https://github.com/electron/electron/blob/main/shell/browser/resources/mac/Info.plist

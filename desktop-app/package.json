@@ -1,6 +1,6 @@
 {
   "name": "@dappnet/desktop-app",
-  "version": "1.2.3",
+  "version": "1.2.1",
   "description": "Stay based",
   "main": "build/src/index.js",
   "scripts": {
@@ -33,6 +33,7 @@
     "electron-serve": "^1.1.0",
     "electron-squirrel-startup": "^1.0.0",
     "electron-updater": "^5.2.1",
+    "ethers": "^5.7.2",
     "ipfs-http-client": "^56.0.2",
     "lodash": "^4.17.21",
     "shelljs": "^0.8.5",
