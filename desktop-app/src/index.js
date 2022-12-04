@@ -88,17 +88,18 @@ function configureAutomaticUpdates() {
 
     console.log(`updateServerUrl: ${updateServerUrl}`)
 
+    autoUpdater.setFeedURL({
+        // url: "file:///Users/liamz/Documents/Projects/dappnet/desktop-app/test/auto-update/update.json"
+        url: updateServerUrl
+    })
+    
     if (app.isPackaged) {
-        autoUpdater.setFeedURL({
-            // url: "file:///Users/liamz/Documents/Projects/dappnet/desktop-app/test/auto-update/update.json"
-            url: updateServerUrl
-        })
-
-        autoUpdater.checkForUpdates()
-
         setInterval(() => {
             autoUpdater.checkForUpdates()
-        }, 30000)
+        }, 60000)
+    } else {
+        // Leave for testing:
+        // autoUpdater.checkForUpdates()
     }
 
     const log = console.log
@@ -123,9 +124,9 @@ function configureAutomaticUpdates() {
         log('update-not-available')
     })
 
-    autoUpdater.on('download-progress', (ev, progressObj) => {
-        log('download-progress', `${progressObj.percent}%`)
-    })
+    // autoUpdater.on('download-progress', (ev, progressObj) => {
+    //     log('download-progress', `${progressObj.percent}%`)
+    // })
 
     autoUpdater.on('update-downloaded', (event, releaseNotes, releaseName) => {
         const dialogOpts = {

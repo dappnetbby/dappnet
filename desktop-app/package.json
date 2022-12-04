@@ -1,6 +1,6 @@
 {
   "name": "@dappnet/desktop-app",
-  "version": "1.2.1",
+  "version": "1.3.3",
   "description": "Stay based",
   "main": "build/src/index.js",
   "scripts": {

@@ -28,19 +28,14 @@ files:
   # - ./vendor/.ipfs
   # - vendor/ipfs/go-ipfs_v0.13.0_${platform}-${arch}/ipfs
 
-dmg:
-  sign: false
-  contents:
-    - type: link
-      path: /Applications
-      x: 410
-      y: 150
-    - type: file
-      x: 130
-      y: 150
+
+# -----------------
+# macOS.
+# -----------------
 
 mac:
-  electronLanguages: "en"
+  electronLanguages: 
+   - en
   
   # https://kilianvalkhof.com/2019/electron/notarizing-your-electron-application/
   hardenedRuntime: true
@@ -74,12 +69,33 @@ mac:
   #  - vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs
 
   category: public.app-category.tools
+
+dmg:
+  sign: false
+  contents:
+    - type: link
+      path: /Applications
+      x: 410
+      y: 150
+    - type: file
+      x: 130
+      y: 150
+
 pkg:
   scripts: ./pkg/mac/scripts/
 
 
+# -----------------
+# Windows.
+# -----------------
+
 win:
   target: nsis
+
+
+# -----------------
+# Linux.
+# -----------------
 
 linux:
   target:
