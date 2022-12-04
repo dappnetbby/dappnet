@@ -6,6 +6,8 @@ compression: store
 asarUnpack:
  - vendor/
 
+afterSign: scripts/notarize.js
+
 publish:
   provider: github
   owner: gliss-co
@@ -27,6 +29,7 @@ files:
   # - vendor/ipfs/go-ipfs_v0.13.0_${platform}-${arch}/ipfs
 
 dmg:
+  sign: false
   contents:
     - type: link
       path: /Applications
@@ -37,9 +40,14 @@ dmg:
       y: 150
 
 mac:
-  # entitlements: build/entitlements.mac.plist
-  # entitlementsInherit: build/entitlements.mac.plist
   electronLanguages: "en"
+  
+  # https://kilianvalkhof.com/2019/electron/notarizing-your-electron-application/
+  hardenedRuntime: true
+  entitlements: dist-resources/pkg/mac/entitlements.mac.plist
+  entitlementsInherit: dist-resources/pkg/mac/entitlements.mac.plist
+  # gatekeeperAssess: true # Verify code signing.
+  gatekeeperAssess: false
   
   target:
     # Only .pkg target is supported, since we use the pkg-installer script to install the root CA.
@@ -55,8 +63,6 @@ mac:
 
   # identity: null
 
-  # Verify code signing.
-  gatekeeperAssess: true
   
   # Edit Info.plist.
   # Source: https://github.com/electron/electron/blob/main/shell/browser/resources/mac/Info.plist

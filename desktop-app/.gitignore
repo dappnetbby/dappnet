@@ -6,3 +6,4 @@ vendor/ipfs/**
 !vendor/ipfs/.gitkeep
 .env
 .ipfs
+foo.p12
