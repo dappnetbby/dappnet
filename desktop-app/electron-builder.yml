@@ -2,6 +2,10 @@ appId: eth.dappnet
 copyright: Liam Zebedee 2022.
 productName: Dappnet
 
+protocols:
+ - name: "Dappnet URL"
+   schemes: ["dappnet"]
+
 compression: store
 asarUnpack:
  - vendor/
@@ -19,13 +23,12 @@ directories:
 
 files:
   - package.json
-  - src/
   - build/
-  - ui/
+  - ui/out/
   - node_modules/
-  - vendor/
-  # - ./vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs
-  # - ./vendor/.ipfs
+  - vendor/ipfs
+
+  # ${platform} and ${arch} don't work here.
   # - vendor/ipfs/go-ipfs_v0.13.0_${platform}-${arch}/ipfs
 
 

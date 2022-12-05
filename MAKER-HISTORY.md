@@ -3,6 +3,7 @@
 iterations and things I had to learn:
 
 - original idea, which was an in-browser js `<iframe>` which intercepted requests using serviceworkers and verified the hash
+- 2nd iteration, I thought we would need an IPFS accelerator, but it seems IPFS is fast enough rn
 - local client which used cloudflare/fleek ipfs (until we got rate-limited)
 - local js-ipfs node, which didn't work.
 - local kubo node + dappnet. wrangling with ipfs migration crap.
