@@ -7,6 +7,7 @@
     "build:chrome": "rm -rf build/chrome/ && parcel build src/chrome/manifest.json --dist-dir build/chrome/ --no-content-hash --config @parcel/config-webextension",
     "build:firefox": "rm -rf build/firefox/ && parcel build src/firefox/manifest.json --dist-dir build/firefox/ --no-content-hash --config @parcel/config-webextension",
     "watch:chrome": "parcel watch --dist-dir build/chrome/ --no-content-hash --config @parcel/config-webextension src/chrome/manifest.json",
+    "watch:electron": "parcel watch --dist-dir build/electron/ --no-content-hash --config @parcel/config-webextension src/electron/manifest.json",
     "watch:firefox": "parcel watch --dist-dir build/firefox/ --no-content-hash --config @parcel/config-webextension src/firefox/manifest.json"
   },
   "repository": {
