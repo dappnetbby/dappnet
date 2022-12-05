@@ -1,3 +1,67 @@
+how could that work? 
+
+
+1. download app (private download link anyways)
+2. install .pkg
+3. connect wallet, and activate
+4. if nft is detected, app begins use
+5. if nft not detected, you must buy one!
+
+
+
+
+
+https://danromero.org/config-xyz.html
+config file:
+- connected wallets/accounts
+- ipfs node URL / accelerator subscription
+- eth rpc node URL
+- list of favourite apps
+- settings
+  - open in browser? 
+  - homepage (theme etc)
+
+dappnet features:
+- download updates via dappnet:// URL's inside a headless browserwindow
+- CLI feature to manually install an update
+
+
+
+path?
+- we manually curate which apps are featured on the dappnet homepage.
+- only those apps that actually work will be shown here
+- users can switch up their homepage and use a different setup if they want.
+
+
+how does it work? 
+- automatically connect wallet for all dapps
+
+
+
+
+
+
+
+some sort of way of distributing dappnet now 
+where people have to own an NFT to access it
+
+how could we do this simply? 
+
+1. download page only shown to the NFT holders
+    but then people can share the binary
+2. client literally has its own licensing mechanism
+    sign something using rainbow
+
+
+
+so basically:
+
+1. download dappnet
+2. login with NFT
+3. 
+
+
+
 dappnet secret alpha
 https://gist.github.com/liamzebedee/b7f71f5006ffeb4580c64f8767568c59
 

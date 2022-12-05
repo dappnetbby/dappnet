@@ -4,6 +4,14 @@ body {
     user-select: none;
 }
 
+.drag {
+    -webkit-app-region: drag;
+}
+
+.no-drag {
+    -webkit-app-region: no-drag;
+}
+
 .apps {
     display: grid;
     grid-template-columns: repeat(5, 150px);

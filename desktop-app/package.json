@@ -1,15 +1,15 @@
 {
   "name": "@dappnet/desktop-app",
-  "version": "1.3.3",
+  "version": "1.4.0",
   "description": "Stay based",
   "main": "build/src/index.js",
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
-    "start": "electron .",
+    "start": "electron --trace-warnings .",
     "clean": "rm -rf dist/*",
     "pack": "electron-builder",
-    "pack:testing": "electron-builder -c.compression=store --dir --mac --arm64",
+    "pack:testing": "SKIP_NOTARIZE=1 electron-builder -c.compression=store --dir --mac --arm64",
     "publish": "electron-builder --publish always",
     "lint": "eslint --fix src/"
   },
@@ -38,6 +38,7 @@
     "lodash": "^4.17.21",
     "shelljs": "^0.8.5",
     "simple-args-parser": "^1.0.1",
+    "siwe": "^1.1.6",
     "source-map-support": "^0.5.21",
     "update-electron-app": "^2.0.1",
     "yargs": "^17.6.2"

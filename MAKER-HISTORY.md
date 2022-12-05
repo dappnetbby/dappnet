@@ -28,4 +28,5 @@ iterations and things I had to learn:
 - designing copy for where the .eth domains don't resolve properly. ie. "There was no content found for lyra.eth"
 - how to implement automatic updates for the application? trying multiple update servers
 - how to do notarization and code signing, with an additional external binary on macOS
-
+- designed an install page using walletconnect, including a dappnet:// url scheme
+- started updating the install guide v3, when I thought - hey, maybe I could remove the extension install step? 30mins later. client supports .eth natively.

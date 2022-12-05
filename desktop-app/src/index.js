@@ -15,9 +15,10 @@ import { join } from 'node:path';
 import * as _ from 'lodash'
 import { ipfsConfigForFastTeens } from './ipfs';
 import * as yargs from 'yargs'
-import { dialog, autoUpdater } from 'electron';
+import { dialog, autoUpdater, session } from 'electron';
 import { app } from 'electron'
-import { xor } from 'lodash';
+import { SiweMessage } from 'siwe';
+
 
 
 // require('yargs')
@@ -165,6 +166,19 @@ app.setLoginItemSettings({
     openAsHidden: true, // macOS-only.
     // TODO: we need to add additional settings for auto-update on windows.
 });
+app.enableSandbox()
+
+// 
+// Setup dappnet:// URI scheme.
+// 
+const dappnetProtocol = `dappnet`
+if (process.defaultApp) {
+    if (process.argv.length >= 2) {
+        app.setAsDefaultProtocolClient(dappnetProtocol, process.execPath, [path.resolve(process.argv[1])])
+    }
+} else {
+    app.setAsDefaultProtocolClient(dappnetProtocol)
+}
 
 // The UI is contained in ui/.
 // It is built with Next.js, and must be compiled separately.
@@ -175,7 +189,7 @@ serve({
 });
 
 app.whenReady().then(() => {
-    // createWindow();
+    createWindow();
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
@@ -341,17 +355,162 @@ async function createWindow() {
         // icon,
         icon: __dirname + '/../build/icon.icns',
         focusable: true,
+
         webPreferences: {
-            preload: path.join(__dirname, 'ipc-renderer.js'),
-        },
+            nodeIntegrationInWorker: true
+        }
+
+        // frame: false, titleBarStyle: 'hidden',
+        // titleBarOverlay: true
+        // movable: true,
+        
+        // webPreferences: {
+        //     preload: path.join(__dirname, 'window.preload.js'),
+        // },
+    });
+    mainWindow.setWindowButtonVisibility(true)
+
+    // After a new window is opened, focus it.
+
+    // All other urls will be blocked.
+    mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+        return {
+            action: 'allow',
+            overrideBrowserWindowOptions: {
+                // frame: false,
+                width: 1000,
+                height: 800,
+                title: url,
+                focusable: true,
+                parent: null,
+                modal: false,
+                // fullscreenable: false,
+                // autoHideMenuBar: false,
+            }
+        }
+        // if (url === 'about:blank') {
+        //     return {
+        //         action: 'allow',
+        //         overrideBrowserWindowOptions: {
+        //             frame: false,
+        //             focusable: true,
+        //             fullscreenable: false,
+        //         }
+        //     }
+        // }
+        // return { action: 'deny' }
+    })
+
+
+    // mainWindow.webContents.setWindowOpenHandler(handler => {
+    //     handler.preventDefault();
+    //     const newWindow = new BrowserWindow({
+    //         width: 800,
+    //         height: 600,
+    //         title: 'Dappnet',
+    //         icon: __dirname + '/../build/icon.icns',
+    //         focusable: true,
+    //         // frame: false,
+    //         webPreferences: {
+    //             // preload: path.join(__dirname, 'ipc-renderer.js'),
+    //         },
+    //     });
+    //     newWindow.loadURL(handler.url);
+    //     handler.newGuest = newWindow;
+    // })
+
+    const APP_NAME = 'Dappnet'
+    mainWindow.webContents.on('did-start-loading', () => {
+    //     function doLoadingAnimation() {
+    //         // Animate the three dots in the title bar.
+    //         const title = mainWindow.getTitle()
+    //         if (title.endsWith('...')) {
+    //             mainWindow.setTitle(title.slice(0, -3))
+    //         } else {
+    //             mainWindow.setTitle(title + '.')
+    //         }
+    //     }
+
+    //     function scheduleLoadingAnimation() {
+    //         setTimeout(() => {
+    //             // If we are no longer loading, then cancel the interval.
+    //             if (!mainWindow.webContents.isLoading()) {
+    //                 clearTimeout(this)
+    //                 return
+    //             }
+
+    //             doLoadingAnimation()
+    //             scheduleLoadingAnimation()
+    //         }, 500)
+    //     }
+        
+    //     scheduleLoadingAnimation()
+    //     // mainWindow.setProgressBar(2, { mode: 'indeterminate' })
+        mainWindow.setTitle(APP_NAME + '- loading...');    
+        // dappnet://prode.eth
     });
 
-    // Open URL's (.eth apps) in the system's web browser.
-    mainWindow.webContents.on('will-navigate', function(event, url) {
-        console.log(url);
-        event.preventDefault();
-        shell.openExternal(url);
+    mainWindow.webContents.on('did-stop-loading', () => {
+        mainWindow.setTitle(APP_NAME);
+        mainWindow.setProgressBar(-1);
     });
+
+
+    // Load extension
+    // try { 
+    //     // const dappnetExtension = await session.defaultSession.loadExtension('/Users/liamz/Documents/Projects/dappnet/extension/build/chrome')
+    //     // const dappnetExtension = await session.defaultSession.loadExtension('/Users/liamz/Documents/Projects/dappnet/extension/build/electron')
+    // } catch(err) {
+    //     console.error(err)
+    // }
+
+    // Handle the protocol. In this case, we choose to show an Error Box.
+    app.on('open-url', async (event, url) => {
+        // Parse the URL.
+        const parsedUrl = new URL(url)
+
+        // Now verify the user has proven they own the NFT.
+        // dappnet://uniswap.eth
+        const httpsUrl = url.replace('dappnet://', 'https://')
+        try {
+            // Open in current window.
+            // await mainWindow.loadURL(httpsUrl)
+
+            // Open in a new window
+            // Execute this JS in the mainWindow, so we don't have to rewrite all of the settings.
+            const newWindow = await mainWindow.webContents.executeJavaScript(`window.open('${httpsUrl}')`)
+
+        } catch (err) {
+            console.error(err)
+        }
+
+        // Write the auth flag.
+        // const userDataDir = app.getPath('userData')
+        // const dappnetLicenseFile = join(userDataDir, '/bueno')
+        // console.log(dappnetLicenseFile)
+        // writeFileSync(dappnetLicenseFile, 'true')
+
+        // dialog.showErrorBox('Welcome Back', `You arrived from: ${url}`)
+    })
+    
+    // We can load dappnet:// url's inside the client!
+    await session.defaultSession.setProxy({
+        proxyRules: 'socks5://localhost:6801'
+    })
+
+    // Open URL's (.eth apps) in a new window.
+    // mainWindow.webContents.on('will-navigate', function(event, url) {
+    //     console.log(url);
+    //     event.preventDefault();
+    //     shell.openExternal(url);
+    // });
+
+    // Open URL's (.eth apps) in the system's web browser.
+    // mainWindow.webContents.on('will-navigate', function(event, url) {
+    //     console.log(url);
+    //     event.preventDefault();
+    //     shell.openExternal(url);
+    // });
 
     // Setup the IPFS node.
     const {gatewayOptions} = await setupIpfs();
@@ -366,7 +525,9 @@ async function createWindow() {
         await mainWindow.loadURL('http://localhost:3000');
     } else {
         // Load static assets from `serve`.
-        await mainWindow.loadURL('app://-');
+        // await mainWindow.loadURL('app://-');
+        await mainWindow.loadURL('http://localhost:3000');
+        // await mainWindow.loadURL('https://dappnet-install-point.vercel.app/');
     }
 
     // Open the DevTools.
