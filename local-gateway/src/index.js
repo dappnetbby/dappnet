@@ -286,10 +286,10 @@ function start(opts = {
     httpsServer.listen(PROXY_PORT_HTTPS, async () => {
         console.log(`Proxy server listening on https://localhost:${PROXY_PORT_HTTPS}`)
 
-        await preload('app.ens.eth')
-        await preload('uniswap.eth')
-        await preload('tornadocash.eth')
-        await preload('vitalik.eth')
+        // await preload('app.ens.eth')
+        // await preload('uniswap.eth')
+        // await preload('tornadocash.eth')
+        // await preload('vitalik.eth')
         // await preload('rollerskating.eth')
         // await preload('liamz.eth')
     })

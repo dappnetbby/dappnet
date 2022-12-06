@@ -23,7 +23,7 @@ function Home() {
         'Uniswap, uniswap', 
         'Kwenta, kwenta', 
         'ENS, ens', 
-        'Tornado Cash, tornadocash'
+        'Tornado Cash, tornadocashcommunity'
     ]
 
     return <div className="apps">

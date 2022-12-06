@@ -3,13 +3,11 @@ sourceMap.install();
 import * as path from 'node:path';
 import {spawn, spawnSync} from 'node:child_process';
 
-import {app, BrowserWindow, shell} from 'electron';
+import {app, BrowserWindow, ipcMain, MessageChannelMain, shell} from 'electron';
 import electronIsDev from 'electron-is-dev';
 import serve from 'electron-serve';
 import * as IPFSHttpClient from 'ipfs-http-client';
 
-import * as LocalGateway from '@dappnet/local-gateway';
-import * as LocalSocksProxy from '@dappnet/local-socks5-proxy';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import * as _ from 'lodash'
@@ -17,32 +15,9 @@ import { ipfsConfigForFastTeens } from './ipfs';
 import * as yargs from 'yargs'
 import { dialog, autoUpdater, session } from 'electron';
 import { app } from 'electron'
-import { SiweMessage } from 'siwe';
-
-
-
-// require('yargs')
-//     .scriptName("dappnet")
-//     .usage('$0 <cmd> [args]')
-//     .command('deploy', 'deploy the dir', (yargs) => {
-//         yargs
-//             .option('dir', {
-//                 type: 'string',
-//                 describe: 'the directory to publish'
-//             })
-//             .option('ipfs-node', {
-//                 type: 'string',
-//                 describe: 'the URL to the IPFS node we are using to publish.',
-//                 default: "http://localhost:5001/api/v0"
-//             })
-//             .option('ipns', {
-//                 type: 'string',
-//                 describe: 'Update an IPNS name. The private key should be set in the environment variable, DAPPNET_IPNS_KEY.'
-//             })
-//             .demandOption(['dir', 'ipns'], '')
-//     }, deploy)
-//     .help()
-//     .argv
+const {
+    Worker, isMainThread, parentPort, workerData,
+} = require('node:worker_threads');
 
 
 
@@ -50,13 +25,12 @@ import { SiweMessage } from 'siwe';
 // Print a banner on startup.
 // 
 
-function smashIt() {
+function printBanner() {
     console.log(`dappnet v${app.getVersion()}`)
     console.log(`Do what you think is based work.`)
     console.log(``)
     console.log(``)
 }
-smashIt()
 
 
 // 
@@ -145,204 +119,129 @@ function configureAutomaticUpdates() {
     })
 }
 
-configureAutomaticUpdates()
 
-
+// 
 // Parse arguments.
-console.log(process.argv);
-// TODO: configure local ipfs node.
-// yargs
-//     .option('ipfs-node', {
-//         description
-//     })
+// 
 
+function parseArguments() {
+    console.log(process.argv);
+
+    // require('yargs')
+    //     .scriptName("dappnet")
+    //     .usage('$0 <cmd> [args]')
+    //     .command('deploy', 'deploy the dir', (yargs) => {
+    //         yargs
+    //             .option('dir', {
+    //                 type: 'string',
+    //                 describe: 'the directory to publish'
+    //             })
+    //             .option('ipfs-node', {
+    //                 type: 'string',
+    //                 describe: 'the URL to the IPFS node we are using to publish.',
+    //                 default: "http://localhost:5001/api/v0"
+    //             })
+    //             .option('ipns', {
+    //                 type: 'string',
+    //                 describe: 'Update an IPNS name. The private key should be set in the environment variable, DAPPNET_IPNS_KEY.'
+    //             })
+    //             .demandOption(['dir', 'ipns'], '')
+    //     }, deploy)
+    //     .help()
+    //     .argv
+
+
+    // TODO: configure local ipfs node.
+}
 
 //
 // Configure app.
 //
 
-app.setLoginItemSettings({
-    // openAtLogin: true,
-    openAsHidden: true, // macOS-only.
-    // TODO: we need to add additional settings for auto-update on windows.
-});
-app.enableSandbox()
-
-// 
-// Setup dappnet:// URI scheme.
-// 
-const dappnetProtocol = `dappnet`
-if (process.defaultApp) {
-    if (process.argv.length >= 2) {
-        app.setAsDefaultProtocolClient(dappnetProtocol, process.execPath, [path.resolve(process.argv[1])])
+function configureApp() {
+    app.setLoginItemSettings({
+        // openAtLogin: true,
+        openAsHidden: true, // macOS-only.
+        // TODO: we need to add additional settings for auto-update on windows.
+    });
+    app.enableSandbox()
+    
+    // Setup dappnet:// URI scheme.
+    // 
+    const dappnetProtocol = `dappnet`
+    if (process.defaultApp) {
+        if (process.argv.length >= 2) {
+            app.setAsDefaultProtocolClient(dappnetProtocol, process.execPath, [path.resolve(process.argv[1])])
+        }
+    } else {
+        app.setAsDefaultProtocolClient(dappnetProtocol)
     }
-} else {
-    app.setAsDefaultProtocolClient(dappnetProtocol)
 }
 
-// The UI is contained in ui/.
-// It is built with Next.js, and must be compiled separately.
-// This must be run 1st, before the app is started, otherwise we get the error:
-// (node:28931) UnhandledPromiseRejectionWarning: Error: protocol.registerSchemesAsPrivileged should be called before app is ready
-serve({
-    directory: __dirname + '/../../ui/out/',
-});
 
-app.whenReady().then(() => {
-    createWindow();
-
-    app.on('activate', () => {
-        if (BrowserWindow.getAllWindows().length === 0) {
-            createWindow();
-        }
+function serveUI() {
+    // The UI is contained in ui/.
+    // It is built with Next.js, and must be compiled separately.
+    // This must be run 1st, before the app is started, otherwise we get the error:
+    // (node:28931) UnhandledPromiseRejectionWarning: Error: protocol.registerSchemesAsPrivileged should be called before app is ready
+    serve({
+        directory: __dirname + '/../../ui/out/',
     });
-});
+}
 
-app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') {
-        app.quit();
+function setupExtension() {
+    // Load extension
+    try {
+        // const dappnetExtension = await session.defaultSession.loadExtension('/Users/liamz/Documents/Projects/dappnet/extension/build/chrome')
+        // const dappnetExtension = await session.defaultSession.loadExtension('/Users/liamz/Documents/Projects/dappnet/preload/dist')
+    } catch (err) {
+        console.error(err)
     }
-});
+}
 
-async function setupIpfs() {
-    const gatewayOptions = {};
+function startGateway() {
+    const appPath = app.getAppPath()
+    const appDataPath = app.getPath('appData')
+    require('./gateway/worker')({ appPath, appDataPath })
+}
 
-    // mock until I've got yargs in.
-    const argv = {}
-    if (argv['ipfs-node']) {
-        gatewayOptions.ipfsNodeURL = arguments_['ipfs-node'];
-    } else {
-        // Start local IPFS node.
-        // const appPath = app.getAppPath()
-        const appPath = app.getAppPath().replace('app.asar', 'app.asar.unpacked')
-        const ipfsBinaryPath = path.join(appPath, `/vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs`)
-        // let ipfsPath
-        // if (electronIsDev) {
-        //     ipfsPath = path.join(appPath, `/vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs`)
-        // } else {
-        //     ipfsPath = path.join(asarUnpackedPath, `/vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs`)
-        // }
+function startWallet() {
+    let walletWorkerCounter = 1
+    const generateWalletWorkerMessageId = () => walletWorkerCounter++
+    const walletWorkerCbs = {}
+    
+    // Start wallet worker.
+    const walletWorker = require('./wallet/wallet')()
 
-        console.log(`appPath`, app.getAppPath())
-        console.log('execPath', process.execPath);
-        console.log(`ipfsPath`, ipfsBinaryPath);
+    // Await a reply.
+    walletWorker.on('message', (msg) => {
+        const { id, res } = msg
+        walletWorkerCbs[id](res)
+    })
 
-        // The userData directory is like:
-        // macOS: ~/Library/Application Support/Dappnet/
-        // Linux: ~/.config/Dappnet
-        // Windows: %APPDATA%\Dappnet
-        const userDataDir = app.getPath('appData')
-        // Location of the ipfs data directory, which is ordinarily ~/.ipfs.
-        const IPFS_PATH = path.join(userDataDir, '/.ipfs/')
-        const IPFS_CONFIG_PATH = join(IPFS_PATH, '/config')
-        const env = { IPFS_PATH }
-        
-        console.log(`IPFS_PATH`, IPFS_PATH)
-        console.log(`IPFS_CONFIG_PATH`, IPFS_CONFIG_PATH)
+    ipcMain.handle('ethereum-request()', async function (_, argsStr) {
+        return new Promise((resolve, rej) => {
+            // Generate a unique id for this request.
+            const id = generateWalletWorkerMessageId()
 
-        if (!existsSync(IPFS_CONFIG_PATH)) {
-            console.log(`IPFS: no config, initializing the node`)
-
-            // Initialize IPFS, creating a config file.
-            spawnSync(ipfsBinaryPath, [`init`], { env, stdio: 'inherit' })
-            
-            // Sanity check it worked.
-            if (!existsSync(IPFS_CONFIG_PATH)) {
-                throw new Error("IPFS config was not generated after running `ipfs init`, meaning something went wrong.")
+            // Setup a handler for the reply.
+            walletWorkerCbs[id] = (res) => {
+                resolve(res)
+                delete walletWorkerCbs[id]
             }
 
-            // Now add custom peers (ie. Cloudflare) to make it fast.
-            // See: https://docs.ipfs.tech/how-to/peering-with-content-providers/#content-provider-list
-            // NOTE: `Peers` config option is NOT supported by the js-ipfs node.
-            const ipfsConfig = JSON.parse(readFileSync(IPFS_CONFIG_PATH, { encoding: "utf-8" }))
-            
-            let existingPeers = _.get(ipfsConfig, "Peering.Peers", [])
-            if(existingPeers == null) {
-                // FFS, why couldn't they just set this to an empty array?
-                existingPeers = []
-            }
+            // Forward to the wallet worker.
+            walletWorker.postMessage({ argsStr, id })
+        })
+    })
+}
 
-            const peers = 
-            _.set(
-                ipfsConfig,
-                "Peering.Peers",
-                [...existingPeers, ...ipfsConfigForFastTeens.Peering.Peers]
-            )
-
-            // Write out the new config.
-            writeFileSync(IPFS_CONFIG_PATH, JSON.stringify(ipfsConfig, null, 2))
-
-            console.log(`IPFS: initialization done`)
-        }
-
-        const run = (cmd, args) => {
-            const ipfs = spawn(
-                cmd,
-                args.split(' '),
-                { env, stdio: 'inherit' }
-            );
-
-            // ipfs.stdout.on('data', (data) => {
-            //     console.log(`[${cmd}] ${data}`);
-            // });
-
-            // ipfs.stderr.on('data', (data) => {
-            //     console.error(`[${cmd}] ${data}`);
-            // });
-
-            ipfs.on('close', (code) => {
-                if (code !== 0) {
-                    console.log(`[${cmd}] process exited with code ${code}`);
-                }
-            });
-        }
-
-        console.log(`IPFS: starting the daemon`)
-        run(ipfsBinaryPath, `daemon --stream-channels --enable-namesys-pubsub --enable-gc --manage-fdlimit`)
-    }
-
-    const enableLocalIpfsNode = false;
-    if (enableLocalIpfsNode) {
-        // Launch the IPFS node.
-        const ipfsNode = await IPFSCore.create({
-            start: true,
-            // config: {
-            //     // https://docs.ipfs.tech/how-to/peering-with-content-providers/#content-provider-list
-            //     // Bootstrap: [
-            //     //     "/dnsaddr/node-8.ingress.cloudflare-ipfs.com",
-            //     //     "/dns/cluster0.fsn.dwebops.pub",
-            //     //     "/ip4/139.178.68.217/tcp/6744"
-            //     // ]
-            // },
-            EXPERIMENTAL: {
-                ipnsPubsub: true,
-            },
-        });
-        const id = await ipfsNode.id();
-        console.log(id);
-
-        // const ipfsPath = "/ipfs/QmTau1nKy3axaPKU866BWkf8CfaiKrMYWXC5sVUVpJRSgW/"
-        // async function thing() {
-        //     const ipfsPath = "QmTau1nKy3axaPKU866BWkf8CfaiKrMYWXC5sVUVpJRSgW"
-        //     for await (const chunk of ipfsNode.get(ipfsPath)) {
-        //         console.info('c', chunk)
-        //     }
-        // }
-        // thing()
-
-        gatewayOptions.ipfsNode = ipfsNode;
-    }
-
-    const enableLocalIpfsHttpClient = true;
-    if (enableLocalIpfsHttpClient) {
-        const ipfsNode = IPFSHttpClient.create({
-            url: 'http://127.0.0.1:5001',
-        });
-        gatewayOptions.ipfsNode = ipfsNode;
-        gatewayOptions.ipfsNodeURL = 'http://localhost:5001';
-    }
-
-    return {gatewayOptions};
+function fixInjectedEthereumObject(window) {
+    // Then we inject a script which proxies the window.ethereum object to the dappnetProvider object:
+    // This is because window.ethereum needs to be mutable, because some dapps (Uniswap) fuck with it.
+    window.webContents.executeJavaScript(`
+        window.ethereum = dappnetProvider
+    `)
 }
 
 async function createWindow() {
@@ -357,120 +256,43 @@ async function createWindow() {
         focusable: true,
 
         webPreferences: {
-            nodeIntegrationInWorker: true
+            nodeIntegrationInWorker: true,
+            // https://stackoverflow.com/questions/58653223/why-does-preload-js-return-error-module-not-found
+            preload: path.join(__dirname, 'preload.js'),
         }
 
         // frame: false, titleBarStyle: 'hidden',
         // titleBarOverlay: true
         // movable: true,
-        
-        // webPreferences: {
-        //     preload: path.join(__dirname, 'window.preload.js'),
-        // },
     });
-    mainWindow.setWindowButtonVisibility(true)
-
-    // After a new window is opened, focus it.
-
-    // All other urls will be blocked.
-    mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-        return {
-            action: 'allow',
-            overrideBrowserWindowOptions: {
-                // frame: false,
-                width: 1000,
-                height: 800,
-                title: url,
-                focusable: true,
-                parent: null,
-                modal: false,
-                // fullscreenable: false,
-                // autoHideMenuBar: false,
-            }
-        }
-        // if (url === 'about:blank') {
-        //     return {
-        //         action: 'allow',
-        //         overrideBrowserWindowOptions: {
-        //             frame: false,
-        //             focusable: true,
-        //             fullscreenable: false,
-        //         }
-        //     }
-        // }
-        // return { action: 'deny' }
-    })
+    fixInjectedEthereumObject(mainWindow)
 
 
-    // mainWindow.webContents.setWindowOpenHandler(handler => {
-    //     handler.preventDefault();
-    //     const newWindow = new BrowserWindow({
-    //         width: 800,
-    //         height: 600,
-    //         title: 'Dappnet',
-    //         icon: __dirname + '/../build/icon.icns',
-    //         focusable: true,
-    //         // frame: false,
-    //         webPreferences: {
-    //             // preload: path.join(__dirname, 'ipc-renderer.js'),
-    //         },
-    //     });
-    //     newWindow.loadURL(handler.url);
-    //     handler.newGuest = newWindow;
-    // })
-
+    // Loading indicator.
     const APP_NAME = 'Dappnet'
     mainWindow.webContents.on('did-start-loading', () => {
-    //     function doLoadingAnimation() {
-    //         // Animate the three dots in the title bar.
-    //         const title = mainWindow.getTitle()
-    //         if (title.endsWith('...')) {
-    //             mainWindow.setTitle(title.slice(0, -3))
-    //         } else {
-    //             mainWindow.setTitle(title + '.')
-    //         }
-    //     }
-
-    //     function scheduleLoadingAnimation() {
-    //         setTimeout(() => {
-    //             // If we are no longer loading, then cancel the interval.
-    //             if (!mainWindow.webContents.isLoading()) {
-    //                 clearTimeout(this)
-    //                 return
-    //             }
-
-    //             doLoadingAnimation()
-    //             scheduleLoadingAnimation()
-    //         }, 500)
-    //     }
-        
-    //     scheduleLoadingAnimation()
-    //     // mainWindow.setProgressBar(2, { mode: 'indeterminate' })
         mainWindow.setTitle(APP_NAME + '- loading...');    
-        // dappnet://prode.eth
     });
-
     mainWindow.webContents.on('did-stop-loading', () => {
         mainWindow.setTitle(APP_NAME);
         mainWindow.setProgressBar(-1);
     });
 
 
-    // Load extension
-    // try { 
-    //     // const dappnetExtension = await session.defaultSession.loadExtension('/Users/liamz/Documents/Projects/dappnet/extension/build/chrome')
-    //     // const dappnetExtension = await session.defaultSession.loadExtension('/Users/liamz/Documents/Projects/dappnet/extension/build/electron')
-    // } catch(err) {
-    //     console.error(err)
-    // }
-
-    // Handle the protocol. In this case, we choose to show an Error Box.
+    // 
+    // Setup handlers for .eth domains, and dappnet:// URIs.
+    // 
+    
+    // Forward all connections to the local gateway.
+    await session.defaultSession.setProxy({
+        proxyRules: 'socks5://localhost:6801'
+    })
+    
+    // Handle when a user opens/clicks dappnet://uniswap.eth, and route it to https://uniswap.eth in our client.
     app.on('open-url', async (event, url) => {
         // Parse the URL.
         const parsedUrl = new URL(url)
 
-        // Now verify the user has proven they own the NFT.
-        // dappnet://uniswap.eth
         const httpsUrl = url.replace('dappnet://', 'https://')
         try {
             // Open in current window.
@@ -479,7 +301,6 @@ async function createWindow() {
             // Open in a new window
             // Execute this JS in the mainWindow, so we don't have to rewrite all of the settings.
             const newWindow = await mainWindow.webContents.executeJavaScript(`window.open('${httpsUrl}')`)
-
         } catch (err) {
             console.error(err)
         }
@@ -489,21 +310,31 @@ async function createWindow() {
         // const dappnetLicenseFile = join(userDataDir, '/bueno')
         // console.log(dappnetLicenseFile)
         // writeFileSync(dappnetLicenseFile, 'true')
-
-        // dialog.showErrorBox('Welcome Back', `You arrived from: ${url}`)
-    })
-    
-    // We can load dappnet:// url's inside the client!
-    await session.defaultSession.setProxy({
-        proxyRules: 'socks5://localhost:6801'
     })
 
-    // Open URL's (.eth apps) in a new window.
-    // mainWindow.webContents.on('will-navigate', function(event, url) {
-    //     console.log(url);
-    //     event.preventDefault();
-    //     shell.openExternal(url);
-    // });
+    // New windows should look different to the main Dappnet window.
+    mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+        return {
+            action: 'allow',
+            outlivesOpener: true,
+            overrideBrowserWindowOptions: {
+                // frame: false,
+                width: 1000,
+                height: 800,
+                title: url,
+                focusable: true,
+                parent: null,
+                modal: false,
+
+                // fullscreenable: false,
+                // autoHideMenuBar: false,
+                webPreferences: {
+                    nodeIntegrationInWorker: true,
+                    preload: path.join(__dirname, 'preload.js'),
+                }
+            }
+        }
+    })
 
     // Open URL's (.eth apps) in the system's web browser.
     // mainWindow.webContents.on('will-navigate', function(event, url) {
@@ -512,21 +343,15 @@ async function createWindow() {
     //     shell.openExternal(url);
     // });
 
-    // Setup the IPFS node.
-    const {gatewayOptions} = await setupIpfs();
-
-    // Launch the .eth/IPFS gateway.
-    const ensGateway = LocalGateway.start(gatewayOptions);
-
-    // Launch SOCKS5 proxy server.
-    const socksServer = LocalSocksProxy.start();
-
     if (process.env.UI_DEV) {
-        await mainWindow.loadURL('http://localhost:3000');
+        // await mainWindow.loadURL('http://localhost:3000');
+        // await mainWindow.loadURL('http://localhost:3000');
+        await mainWindow.loadURL('app://-');
+        // await mainWindow.loadURL('https://app.uniswap.org');
+        // await mainWindow.loadURL('https://app.uniswap.org');
     } else {
         // Load static assets from `serve`.
-        // await mainWindow.loadURL('app://-');
-        await mainWindow.loadURL('http://localhost:3000');
+        await mainWindow.loadURL('app://-');
         // await mainWindow.loadURL('https://dappnet-install-point.vercel.app/');
     }
 
@@ -537,3 +362,27 @@ async function createWindow() {
 }
 
 
+printBanner()
+parseArguments()
+configureAutomaticUpdates()
+configureApp()
+serveUI()
+startGateway()
+startWallet()
+
+app.whenReady().then(() => {
+    // setupExtension()
+    createWindow()
+
+    app.on('activate', () => {
+        if (BrowserWindow.getAllWindows().length === 0) {
+            createWindow();
+        }
+    });
+});
+
+app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') {
+        app.quit();
+    }
+});
