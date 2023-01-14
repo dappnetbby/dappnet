@@ -1,0 +1,3 @@
+[submodule "verifiable-rpc/test/lib/forge-std"]
+	path = verifiable-rpc/test/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
