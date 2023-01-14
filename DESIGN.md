@@ -45,7 +45,19 @@ Compatible with Chrome/Firefox. Proxies .eth requests in-browser to a local SOCK
 
 ### Local SOCKS5 Proxy.
 
-Proxies requests to the local gateway.
+Proxies requests to the local gateway. 
+
+The gateway provides for both HTTP and HTTPS connections. Port 10422 serves HTTP, port 10424 serves HTTPS.
+
+The SOCKS5 proxy rewrites the network requests automatically:
+
+```sh
+# proxy rewrite schema
+localhost:80  -> localhost:10422
+localhost:443 -> localhost:10424
+```
+
+The proxy is hosted on `localhost:6801`.
 
 ### Local gateway.
 

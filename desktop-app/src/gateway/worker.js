@@ -18,6 +18,28 @@ import { join } from 'node:path';
 import { ipfsConfigForFastTeens } from '../ipfs';
 
 
+const runBinary = (cmd, args, env) => {
+    const program = spawn(
+        cmd,
+        args.split(' '),
+        { env, stdio: 'inherit' }
+    );
+
+    // program.stdout.on('data', (data) => {
+    //     console.log(`[${cmd}] ${data}`);
+    // });
+
+    // program.stderr.on('data', (data) => {
+    //     console.error(`[${cmd}] ${data}`);
+    // });
+
+    program.on('close', (code) => {
+        if (code !== 0) {
+            console.log(`[${cmd}] process exited with code ${code}`);
+        }
+    });
+}
+
 async function setupIpfs({ appPath, appDataPath }) {
     const gatewayOptions = {};
 
@@ -90,30 +112,9 @@ async function setupIpfs({ appPath, appDataPath }) {
             console.log(`IPFS: initialization done`)
         }
 
-        const run = (cmd, args) => {
-            const ipfs = spawn(
-                cmd,
-                args.split(' '),
-                { env, stdio: 'inherit' }
-            );
-
-            // ipfs.stdout.on('data', (data) => {
-            //     console.log(`[${cmd}] ${data}`);
-            // });
-
-            // ipfs.stderr.on('data', (data) => {
-            //     console.error(`[${cmd}] ${data}`);
-            // });
-
-            ipfs.on('close', (code) => {
-                if (code !== 0) {
-                    console.log(`[${cmd}] process exited with code ${code}`);
-                }
-            });
-        }
 
         console.log(`IPFS: starting the daemon`)
-        run(ipfsBinaryPath, `daemon --stream-channels --enable-namesys-pubsub --enable-gc --manage-fdlimit`)
+        runBinary(ipfsBinaryPath, `daemon --stream-channels --enable-namesys-pubsub --enable-gc --manage-fdlimit`, env)
     }
 
     const enableLocalIpfsNode = false;
@@ -160,15 +161,24 @@ async function setupIpfs({ appPath, appDataPath }) {
     return { gatewayOptions };
 }
 
+const startLocalSocksProxyRust = ({ appPath }) => {
+    // cargo run -- --no - auth--port 6801
+    const appPathUnpacked = appPath.replace('app.asar', 'app.asar.unpacked')
+    const binaryPath = path.join(appPathUnpacked, `/vendor/local-proxy/merino`)
+    runBinary(binaryPath, `--no-auth --port 6801`, {})
+}
+
 async function main() {
+    const { appPath, appDataPath } = workerData
+
     // Setup the IPFS node.
-    const { gatewayOptions } = await setupIpfs(workerData);
+    const { gatewayOptions } = await setupIpfs({ appPath, appDataPath });
 
     // Launch the .eth/IPFS gateway.
     const ensGateway = LocalGateway.start(gatewayOptions);
 
     // Launch SOCKS5 proxy server.
-    const socksServer = LocalSocksProxy.start();
+    startLocalSocksProxyRust({ appPath })
 }
 
 

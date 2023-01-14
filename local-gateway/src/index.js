@@ -74,7 +74,7 @@ function start(opts = {
     
     // Preload DNS endpoints.
     getDNSEndpoints()
-    testENS()
+    // testENS()
 
     // let ipfsGateways = [
     //     // 'https://cloudflare-ipfs.com',
