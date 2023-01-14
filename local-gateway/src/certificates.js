@@ -77,6 +77,22 @@ cQIDAQAB
     });
     const csrSigned = csr.getPEM(); // signed with sbjprvkey automatically
 
+    // The UTC time of when the cert expires.
+    const certExpiryDistance = 365 * 24 * 60 * 60 * 1000; // 1 year
+    let certNotBefore = new Date(Date.now())
+    let certNotAfter = new Date(Date.now() + certExpiryDistance)
+
+    // Convert certExpiry to a time that resembles YYYYMMDDHHMMSSZ
+    // https://www.rfc-editor.org/rfc/rfc5280#section-4.1.2.5.1
+    const dateToGeneralizedTime = (date) => {
+        const str = date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z').replace('T', '')
+        return str
+    }
+
+    certNotBefore = dateToGeneralizedTime(certNotBefore)
+    certNotAfter = dateToGeneralizedTime(certNotAfter)
+
+
     let x509 = new rs.X509();
     x509.readCertPEM(`
     -----BEGIN CERTIFICATE-----
@@ -106,12 +122,13 @@ ndkUFD+ToIwa+KmQb+LUMsBhQ9ZcYwYI+g==
 
 
     // STEP2. specify certificate parameters
+
     let cert = new rs.KJUR.asn1.x509.Certificate({
         version: 3,
         serial: { int: Math.round(Math.random()*100000000000) },
         issuer: { str: "/C=US/O=_Development CA/CN=Development certificates" },
-        notbefore: "201231235959Z",
-        notafter: "221231235959Z",
+        notbefore: { str: certNotBefore },
+        notafter: { str: certNotAfter },
         subject: { str: `/C=US/O=Local Development/CN=*.${domain}` },
         sbjpubkey: pub,
         sbjprvkey: prv,
