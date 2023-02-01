@@ -36,7 +36,19 @@ mv go-ipfs/ipfs ./ipfs/go-ipfs_v0.13.0_darwin-amd64/
 rm -rf go-ipfs go-ipfs_v0.13.0_darwin-amd64.tar.gz
 ```
 
-### 2. Build the UI.
+### 2. Compile the local SOCKS5 proxy.
+
+```sh
+cd ../local-socks5-proxy-rs
+
+# We build for mac x64, since this runs on both M1 and Intel chips.
+rustup target add x86_64-apple-darwin
+cargo build --release --target=x86_64-apple-darwin
+
+cp ./target/release/merino ../desktop-app/vendor/local-proxy/merino
+```
+
+### 3. Build the UI.
 
 The UI is developed using Next.js/React in a separate folder - `ui/`. 
 
@@ -49,7 +61,7 @@ npm run build
 npm run export
 ```
 
-### 3. Install the .eth Certificate Authority.
+### 4. Install the .eth Certificate Authority.
 
 This step is unnecessary if you have already installed the Dappnet desktop `.pkg`.
 
