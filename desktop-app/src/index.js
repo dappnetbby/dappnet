@@ -322,8 +322,8 @@ async function createWindow() {
                 width: 1000,
                 height: 800,
                 title: url,
-                focusable: true,
-                parent: null,
+                // focusable: true,
+                // parent: null,
                 modal: false,
 
                 // fullscreenable: false,

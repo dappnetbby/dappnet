@@ -173,11 +173,14 @@ async function main() {
 
     // Setup the IPFS node.
     const { gatewayOptions } = await setupIpfs({ appPath, appDataPath });
+    // TODO kill on exit.
 
     // Launch the .eth/IPFS gateway.
     const ensGateway = LocalGateway.start(gatewayOptions);
+    // TODO kill on exit.
 
     // Launch SOCKS5 proxy server.
+    // LocalSocksProxy.start()
     startLocalSocksProxyRust({ appPath })
 }
 

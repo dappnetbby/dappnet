@@ -83,10 +83,14 @@ export class Eip1193Bridge extends EventEmitter {
             case "eth_sendRawTransaction": {
                 return await this.provider.sendTransaction(params[0]);
             }
+            
+            
             case "eth_call": {
                 const req = ethers.providers.JsonRpcProvider.hexlifyTransaction(params[0]);
                 return await this.provider.call(req, params[1]);
             }
+
+
             case "estimateGas": {
                 if (params[1] && params[1] !== "latest") {
                     throwUnsupported("estimateGas does not support blockTag");
