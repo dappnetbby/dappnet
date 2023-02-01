@@ -19,6 +19,8 @@ const {
     Worker, isMainThread, parentPort, workerData,
 } = require('node:worker_threads');
 
+const featureFlags = require("./feature-flags")
+
 
 
 // 
@@ -150,7 +152,6 @@ function parseArguments() {
     //     .help()
     //     .argv
 
-
     // TODO: configure local ipfs node.
 }
 
@@ -265,7 +266,10 @@ async function createWindow() {
         // titleBarOverlay: true
         // movable: true,
     });
-    fixInjectedEthereumObject(mainWindow)
+
+    if(featureFlags.EMBEDDED_WALLET) {
+        fixInjectedEthereumObject(mainWindow)
+    }
 
 
     // Loading indicator.
@@ -312,42 +316,49 @@ async function createWindow() {
         // writeFileSync(dappnetLicenseFile, 'true')
     })
 
-    // New windows should look different to the main Dappnet window.
-    mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-        return {
-            action: 'allow',
-            outlivesOpener: true,
-            overrideBrowserWindowOptions: {
-                // frame: false,
-                width: 1000,
-                height: 800,
-                title: url,
-                // focusable: true,
-                // parent: null,
-                modal: false,
-
-                // fullscreenable: false,
-                // autoHideMenuBar: false,
-                webPreferences: {
-                    nodeIntegrationInWorker: true,
-                    preload: path.join(__dirname, 'preload.js'),
+    if(featureFlags.EMBEDDED_BROWSER) {
+        // New windows should look different to the main Dappnet window.
+        mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+            return {
+                action: 'allow',
+                outlivesOpener: true,
+                overrideBrowserWindowOptions: {
+                    // frame: false,
+                    width: 1000,
+                    height: 800,
+                    title: url,
+                    // focusable: true,
+                    // parent: null,
+                    modal: false,
+    
+                    // fullscreenable: false,
+                    // autoHideMenuBar: false,
+                    webPreferences: {
+                        nodeIntegrationInWorker: true,
+                        preload: path.join(__dirname, 'preload.js'),
+                    }
                 }
             }
+        })
+    } else {
+        const openInSystemBrowser = (url) => {
+            console.log(url);
+            shell.openExternal(url);
         }
-    })
+        mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+            openInSystemBrowser(url)
+        })
+        // Open URL's (.eth apps) in the system's web browser.
+        mainWindow.webContents.on('will-navigate', function (event, url) {
+            event.preventDefault();
+            openInSystemBrowser(url)
+        });
+    }
 
-    // Open URL's (.eth apps) in the system's web browser.
-    // mainWindow.webContents.on('will-navigate', function(event, url) {
-    //     console.log(url);
-    //     event.preventDefault();
-    //     shell.openExternal(url);
-    // });
 
     if (process.env.UI_DEV) {
         // await mainWindow.loadURL('http://localhost:3000');
-        // await mainWindow.loadURL('http://localhost:3000');
         await mainWindow.loadURL('app://-');
-        // await mainWindow.loadURL('https://app.uniswap.org');
         // await mainWindow.loadURL('https://app.uniswap.org');
     } else {
         // Load static assets from `serve`.
@@ -368,7 +379,10 @@ configureAutomaticUpdates()
 configureApp()
 serveUI()
 startGateway()
-startWallet()
+
+if (featureFlags.EMBEDDED_WALLET) {
+    startWallet()
+}
 
 app.whenReady().then(() => {
     // setupExtension()

@@ -27,7 +27,6 @@
   "dependencies": {
     "@dappnet/local-gateway": "file:../local-gateway",
     "@dappnet/local-socks5-proxy": "file:../local-socks5-proxy",
-    "@dappnet/preload": "file:../preload",
     "@ethersproject/experimental": "^5.7.0",
     "@types/lodash": "^4.14.185",
     "electron-is-dev": "^2.0.0",

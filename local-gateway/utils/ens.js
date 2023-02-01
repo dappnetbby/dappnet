@@ -31,6 +31,7 @@ async function getContentHash(argv) {
     }
 
     if(codec == 'ipns-ns') {
+        // const ipfsHttpClient = IpfsHttpClient.create('http://localhost:5001/api/v0')
         const ipfsHttpClient = IpfsHttpClient.create('http://localhost:5001/api/v0')
         const ipnsPath = await resolveIPNS(ipfsHttpClient, `/ipns/${hash}`)
         console.log(`ipnsPath:`, ipnsPath)
@@ -48,6 +49,7 @@ async function getContentHash(argv) {
         let dnsLinkRes = await resolveDNSLink(dnsLinkName, {
             endpoints: await getDNSEndpoints()
         })
+        console.log(dnsLinkRes)
         console.log('dnsLink entries:')
         dnsLinkRes.links.ipfs.map(entry => {
             console.log(`- ${entry.identifier} (ttl=${entry.ttl})`)

@@ -127,31 +127,31 @@ async function resolveENS(name) {
     0x04 00      identity function   hash fn
     0x05 0f      [length]
     */
-    const contentHashBuf = Buffer.from(contentHashHex.slice(2), 'hex')
+    // const contentHashBuf = Buffer.from(contentHashHex.slice(2), 'hex')
 
-    // FIX for https://github.com/ensdomains/ens-app/issues/849#issuecomment-660179328
-    const isSpecialCaseRawDnsLink = 
-        contentHashBuf[0] == NAMESPACE_IPNS
-        && contentHashBuf[3] == CONTENT_TYPE_DAG_PB
-        && contentHashBuf[4] == IDENTITY_FN
+    // // FIX for https://github.com/ensdomains/ens-app/issues/849#issuecomment-660179328
+    // const isSpecialCaseRawDnsLink = 
+    //     contentHashBuf[0] == NAMESPACE_IPNS
+    //     && contentHashBuf[3] == CONTENT_TYPE_DAG_PB
+    //     && contentHashBuf[4] == IDENTITY_FN
 
-    if (isSpecialCaseRawDnsLink) {
-        // > i believe that specifying 0xe5 for IPNS, 0x01 for the CID version (i'm confused by the second instance of 0x01 which appears after the first in all the 1577 examples, but ignoring that for now), 0x70 for dag-pb (not 100% sure what this does), and 0x00 as the identity transformation, followed by the length of the IPNS identifier and (in the case of DNSLink) the identifier itself in utf-8 is enough to satisfy the requirements
-        // > the 0x00 identity transformation (as compared to e.g. 0x12 for sha2-256) is meant to be the hint!
-        // > for example, using multihashes, multihashes.encode(Buffer.from('noahzinsmeister.com'), 'identity') produces the multihash of < Buffer 00 13 6e 6f 61 68 7a 69 6e 73 6d 65 69 73 74 65 72 2e 63 6f 6d > i.e. 00136e6f61687a696e736d6569737465722e636f6d.converting to CIDv1 via cids, new CID(1, 'dag-pb', multihashes.encode(Buffer.from('noahzinsmeister.com'), 'identity')) yields a CID whose prefix is < Buffer 01 70 00 13 > i.e. 01700013.so, if you see the 0x00 as the multihash function code, the content is utf - 8.
-        //
-        // ...
-        //
-        // I'm gonna kill someone.
-        // Everyone except this guy - https://github.com/ensdomains/ens-app/issues/849#issuecomment-777088950.
-        // See https://github.com/ensdomains/ui/blob/3790d35dcfa010897eae9707f2b383d2b983525e/src/utils/contents.js#L6 for more code to help parse this.
-        // 
-        // If the codec is ipfs-ns, then the hash could be....yet another hash.
-        let hashDecoded = bs58.decode(hash)
-        let hashBuffer = Buffer.from(hashDecoded)
-        dnsLinkName = hashBuffer.slice(2).toString()
-        console.log(`dnsLink ${dnsLinkName}`)
-    }
+    // if (isSpecialCaseRawDnsLink) {
+    //     // > i believe that specifying 0xe5 for IPNS, 0x01 for the CID version (i'm confused by the second instance of 0x01 which appears after the first in all the 1577 examples, but ignoring that for now), 0x70 for dag-pb (not 100% sure what this does), and 0x00 as the identity transformation, followed by the length of the IPNS identifier and (in the case of DNSLink) the identifier itself in utf-8 is enough to satisfy the requirements
+    //     // > the 0x00 identity transformation (as compared to e.g. 0x12 for sha2-256) is meant to be the hint!
+    //     // > for example, using multihashes, multihashes.encode(Buffer.from('noahzinsmeister.com'), 'identity') produces the multihash of < Buffer 00 13 6e 6f 61 68 7a 69 6e 73 6d 65 69 73 74 65 72 2e 63 6f 6d > i.e. 00136e6f61687a696e736d6569737465722e636f6d.converting to CIDv1 via cids, new CID(1, 'dag-pb', multihashes.encode(Buffer.from('noahzinsmeister.com'), 'identity')) yields a CID whose prefix is < Buffer 01 70 00 13 > i.e. 01700013.so, if you see the 0x00 as the multihash function code, the content is utf - 8.
+    //     //
+    //     // ...
+    //     //
+    //     // I'm gonna kill someone.
+    //     // Everyone except this guy - https://github.com/ensdomains/ens-app/issues/849#issuecomment-777088950.
+    //     // See https://github.com/ensdomains/ui/blob/3790d35dcfa010897eae9707f2b383d2b983525e/src/utils/contents.js#L6 for more code to help parse this.
+    //     // 
+    //     // If the codec is ipfs-ns, then the hash could be....yet another hash.
+    //     let hashDecoded = bs58.decode(hash)
+    //     let hashBuffer = Buffer.from(hashDecoded)
+    //     dnsLinkName = hashBuffer.slice(2).toString()
+    //     console.log(`dnsLink ${dnsLinkName}`)
+    // }
 
     let value = {
         codec,
@@ -215,15 +215,30 @@ async function resolveIPNS(ipfsHttpClient, ipnsPath) {
     let cached = ipnsCache.get(ipnsPath)
     if (cached) return cached
 
-    const ipfsPathRoot = await ipfsHttpClient.resolve(ipnsPath, { recursive: true })
-    // console.log(ipfsPathRoot)
-    const value = ipfsPathRoot
+    try {
+        // Race the two.
+        const ipfsPathRoot = await Promise.race([
+            ipfsHttpClient.resolve(ipnsPath, { recursive: true }),
+            new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    reject(new Error("Timed out resolving IPNS path."))
+                }, 1000 * 8)
+            })
+        ])
 
-    // Insert into cache.
-    ipnsCache.put(ipnsPath, value)
+        // const ipfsPathRoot = await ipfsHttpClient.resolve(ipnsPath, { recursive: true })
+        // console.log(ipfsPathRoot)
+        const value = ipfsPathRoot
 
-    // Return the IPFS root path (/ipfs/{cid}/).
-    return value
+        // Insert into cache.
+        ipnsCache.put(ipnsPath, value)
+
+        // Return the IPFS root path (/ipfs/{cid}/).
+        return value
+    } catch(err) {
+        console.log(err)
+        throw err
+    }
 }
 
 module.exports = {

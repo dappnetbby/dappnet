@@ -20,8 +20,8 @@ const App = ({ config }) => {
 
 function Home() {
     const apps = [
-        'Uniswap, uniswap', 
-        'Kwenta, kwenta', 
+        // 'Uniswap, uniswap', 
+        'Kwenta, kwenta',
         'ENS, ens', 
         'Tornado Cash, tornadocashcommunity'
     ]

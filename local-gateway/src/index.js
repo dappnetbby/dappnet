@@ -232,7 +232,8 @@ function start(opts = {
         console.log(req.hostname, gatewayRewrite)
         let gatewayRes = await fetch(
             gatewayRewrite,
-            { highWaterMark: 5 * 1024 * 1024 }
+            // 10MB
+            { highWaterMark: 10 * 1024 * 1024 }
         )
 
         // TODO: make this smart later.
@@ -278,6 +279,8 @@ function start(opts = {
     })
 
     const httpsServer = require('https').Server({
+        // key/cert unused here. This is just so we ca instantiate the server.
+        // They are later dynamically generated using the SNICallback.
         key: fs.readFileSync(__dirname + '/../certs/kwenta.eth.key', 'utf8'),
         cert: fs.readFileSync(__dirname + '/../certs/kwenta.eth.crt', 'utf8'),
         SNICallback: sniCallback,

@@ -95,7 +95,7 @@ function generateCertificate(domain) {
 
     
     const certpem = cert.getPEM()
-    console.log(certpem)
+    // console.log(certpem)
 
     let entry = { key: prvpem, cert: certpem }
     cache[domain] = entry

@@ -38,4 +38,4 @@ iterations and things I had to learn:
 - tried building .eth browsing into the client as a proxy (worked)
 - dappnet:// URI scheme became useful for opening apps outside of client
 - started playing with building in a wallet / rpc provider.
-
+- figuring out verifiable rpc

@@ -26,18 +26,14 @@ openssl genrsa -out ca.key 2048
 # Generate root certificate
 openssl req -x509 -new -nodes -subj "/C=US/O=Dappnet CA/CN=Dappnet certificates" -key ca.key -sha256 -days 3650 -out ca.crt
 
-echo -e "\e[42mSuccess!\e[49m"
-echo
-echo "The following files have been written:"
-echo -e "  - \e[93mca.crt\e[39m is the public certificate that should be imported in your browser"
-echo -e "  - \e[93mca.key\e[39m is the private key that will be used by \e[93mcreate-certificate.sh\e[39m"
-echo
-echo "Next steps:"
-echo -e "  - Import \e[93mca.crt\e[39m in your browser"
-echo -e "  - run \e[93mcreate-certificate.sh example.com\e[39m"
-
+# Generate public key
 openssl rsa -in ca.key -pubout > ca.pubkey
 
+# Convert key to a format that can be used by the gateway.
 openssl rsa -in ca.key -out ca.2.key
 
+# Convert certificate to a format usable by Firefox.
+openssl pkcs12 -export -in server.crt -inkey server.key -out server.p12
+
+# Dump cert/keys to a .json, for import by the gateway.
 python dump_cert.py > dappnet-ca.json

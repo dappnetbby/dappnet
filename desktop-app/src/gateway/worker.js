@@ -19,6 +19,7 @@ import { ipfsConfigForFastTeens } from '../ipfs';
 
 
 const runBinary = (cmd, args, env) => {
+    console.debug(`[exec] ${cmd} ${args}`)
     const program = spawn(
         cmd,
         args.split(' '),
@@ -167,6 +168,9 @@ const startLocalSocksProxyRust = ({ appPath }) => {
     const binaryPath = path.join(appPathUnpacked, `/vendor/local-proxy/merino`)
     runBinary(binaryPath, `--no-auth --port 6801`, {})
 }
+const LocalSocksProxyRust = {
+    start: startLocalSocksProxyRust
+}
 
 async function main() {
     const { appPath, appDataPath } = workerData
@@ -177,11 +181,11 @@ async function main() {
 
     // Launch the .eth/IPFS gateway.
     const ensGateway = LocalGateway.start(gatewayOptions);
-    // TODO kill on exit.
-
+    
     // Launch SOCKS5 proxy server.
     // LocalSocksProxy.start()
-    startLocalSocksProxyRust({ appPath })
+    LocalSocksProxyRust.start({ appPath })
+    // TODO kill on exit.
 }
 
 
