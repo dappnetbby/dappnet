@@ -146,7 +146,7 @@ This will engage multiple steps:
  - notarizing and signing. This essentially sends the app to Apple, where they link it with your developer account. In return, you get a ticket.
  - publishing it to github. A new release is created, and the files are uploaded.
 
-You should asee something like:
+You should see something like:
 
 ```sh
 (base) ➜  desktop-app git:(master) ✗ npm run publish
@@ -178,3 +178,7 @@ You should asee something like:
     [====================] 100% 0.0s | Dappnet-1.3.3.dmg to github
     [====================] 100% 0.0s | Dappnet-1.3.3.pkg to github
 ```
+
+The final step is going onto the [releases page](https://github.com/liamzebedee/test1717/releases) and **changing the release status from draft to release**.
+
+After this, the Hazel update server picks up the new release.
