@@ -150,6 +150,8 @@ async function setupIpfs({ appPath, appDataPath }) {
         gatewayOptions.ipfsNode = ipfsNode;
     }
 
+    // NOTE: this is used in the gateway for IPNS resolution.
+    // Do not remove.
     const enableLocalIpfsHttpClient = true;
     if (enableLocalIpfsHttpClient) {
         const ipfsNode = IPFSHttpClient.create({
@@ -163,11 +165,12 @@ async function setupIpfs({ appPath, appDataPath }) {
 }
 
 const startLocalSocksProxyRust = ({ appPath }) => {
-    // cargo run -- --no - auth--port 6801
+    // cargo run -- --no-auth --port 6801
     const appPathUnpacked = appPath.replace('app.asar', 'app.asar.unpacked')
     const binaryPath = path.join(appPathUnpacked, `/vendor/local-proxy/merino`)
     runBinary(binaryPath, `--no-auth --port 6801`, {})
 }
+
 const LocalSocksProxyRust = {
     start: startLocalSocksProxyRust
 }

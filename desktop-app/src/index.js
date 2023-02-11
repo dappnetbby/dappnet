@@ -201,6 +201,11 @@ function setupExtension() {
 }
 
 function startGateway() {
+    if (process.env.DEV_GATEWAY) {
+        console.debug('[dev] using local gateway')
+        return
+    }
+    
     const appPath = app.getAppPath()
     const appDataPath = app.getPath('appData')
     require('./gateway/worker')({ appPath, appDataPath })
@@ -356,9 +361,10 @@ async function createWindow() {
     }
 
 
-    if (process.env.UI_DEV) {
-        // await mainWindow.loadURL('http://localhost:3000');
-        await mainWindow.loadURL('app://-');
+    if (process.env.DEV_UI) {
+        console.debug('[dev] using local dappnet UI')
+        await mainWindow.loadURL('http://localhost:3000');
+        // await mainWindow.loadURL('app://-');
         // await mainWindow.loadURL('https://app.uniswap.org');
     } else {
         // Load static assets from `serve`.

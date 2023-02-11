@@ -39,16 +39,14 @@ function timeoutAfter(seconds) {
 
 // Autogenerate a certificate for any .eth domain, as a part of the Server Name Identification (SNI) callback in the TLS protocol.
 const sniCallback = (serverName, callback) => {
-    // console.log('sni', serverName)
     var tld = serverName.slice(-3);
-    if (tld != 'eth') {
-        return;
-    }
+    // if (tld != 'eth') {
+    //     return;
+    // }
 
     try {
         // const { key, cert } = generateCertificateOpenSSL(serverName)
         const { key, cert } = generateCertificate(serverName)
-
         // fs.writeFileSync(__dirname + `/../dev-certificates/certs/test.${serverName}.crt`, cert, 'utf8')
 
         const ctx = new tls.createSecureContext({
@@ -63,40 +61,127 @@ const sniCallback = (serverName, callback) => {
     }
 }
 
+// 
+// Errors.
+// 
+
 class ENSNoContentError extends Error { }
 class UnsupportedContentTypeError extends Error { }
 
+// 
+// Middleware for resolving/loading IPFS/IPNS content.
+// 
+
+async function getIpfs(req, res, next) {
+    const cid = req.ensData.hash
+
+    const ipfsPath = `/ipfs/${cid}${req.path || '/'}`
+    res.setHeader('X-Dappnet-IPFS', `${cid}`);
+
+    try {
+        await proxyToGateway(req, ipfsPath, res)
+        return
+    } catch (err) {
+        return next(err)
+    }
+}
+
+
+async function getIpns(req, res, next, opts) {
+    let ipfsPath
+
+    // 1) Resolve the IPNS CID.
+    const { dnsLinkName } = req.ensData
+
+    // 1a) DNSLink.
+    // NOTE: this will be deprecated. Because it's stupid.
+    // Only left it here because I wanted to support Uniswap.
+    if (dnsLinkName) {
+        // Resolve the DNS link.
+        console.time(`resolveDNSLink(${dnsLinkName})`)
+        cid = await resolveDNSLink(dnsLinkName)
+        console.timeEnd(`resolveDNSLink(${dnsLinkName})`)
+
+        // Construct the IPFS path.
+        ipfsPath = `/ipfs/${cid}${req.path || '/'}`
+
+        // TODO: DNSLink resolution assumes only IPFS content here.
+        res.setHeader('X-Dappnet-IPFS', `${cid}`);
+
+        req.ipnsData = {
+            ipfsPath
+        }
+    } else {
+        // 1b) IPNS.
+        // Resolve the IPNS path.
+        // Construct an /ipns/ path and then forward it for resolution.
+        const pubkeyHash = req.ensData.hash
+        const ipnsPath = `/ipns/${pubkeyHash}${req.path || '/'}`
+        ipfsPath = await resolveIPNS(opts.ipfsNode, ipnsPath)
+
+        res.setHeader('X-Dappnet-IPNS', `${ipnsPath}`);
+        
+        // Extract the CID from the IPFS path.
+        const cid = (new URL("http://example-ipfs-path-only-for-testing.com" + ipfsPath)).pathname.split('/')[2] // part after /ipfs/
+        res.setHeader('X-Dappnet-IPFS', `${cid}`);
+
+        req.ipnsData = {
+            ipfsPath
+        }
+    }
+
+    // 2) Proxy the request for a CID to the gateway.
+    try {
+        await proxyToGateway(req, ipfsPath, res)
+        return
+    } catch (err) {
+        return next(err)
+    }
+}
+
+const getIpfsGateway = () => {
+    // NOTE: If the host below is specified as localhost, the ipfs-node software will
+    // perform a 301 redirect to baf_ENCODED_HASH.ipfs.localhost. We don't want this,
+    // since node-fetch can't handle it.
+    return 'http://127.0.0.1:8080'
+}
+
+const proxyToGateway = async (req, ipfsPath, res) => {
+    const gatewayRewrite = `${getIpfsGateway()}${ipfsPath}`
+    // console.log(req.hostname, gatewayRewrite)
+
+    let gatewayRes = await fetch(
+        gatewayRewrite,
+        // 10MB
+        { highWaterMark: 10 * 1024 * 1024 }
+    )
+
+    // Transfer the headers from the request.
+    const headers = `Accept-Ranges Cache-Control Etag Content-Length Last-Modified Content-Type Content-Disposition Content-Length Content-Range Accept-Ranges X-Ipfs-Path X-Ipfs-Roots X-Content-Type-Options Date`.split(' ')
+    const gatewayHeaders = gatewayRes.headers.raw()
+    headers.map(name => {
+        const lowercaseName = name.toLowerCase()
+        if (!gatewayHeaders[lowercaseName]) return
+        // TODO these are all lowercase.
+        const val = gatewayHeaders[lowercaseName][0]
+        res.setHeader(name, val)
+    })
+
+    // Stream the response.
+    await streamPipeline(gatewayRes.body, res);
+
+    res.end()
+}
+
 function start(opts = {
-    ipfsNodeUrl: null,
     ipfsNode: null
 }) {
+    console.log(opts)
     const app = express();
     
     // Preload DNS endpoints.
     getDNSEndpoints()
     // testENS()
-
-    // let ipfsGateways = [
-    //     // 'https://cloudflare-ipfs.com',
-    //     'https://ipfs.fleek.co',
-    //     'https://ipfs.io'
-    //     // 'https://ipfs.eth.limo'
-    // ]
-    //
-    // if (opts.ipfsNodeUrl) {
-    //     ipfsGateways = [opts.ipfsNodeUrl, ...ipfsGateways]
-    // }
-    // 
-    // let ensGateways = [
-    //     (name) => `https://${name}.eth.limo`
-    // ]
-
-    const getIpfsGateway = () => {
-        // NOTE: If the host below is specified as localhost, the ipfs-node software will
-        // perform a 301 redirect to baf_ENCODED_HASH.ipfs.localhost. We don't want this,
-        // since node-fetch can't handle it.
-        return 'http://127.0.0.1:8080'
-    }
 
     // The local gateway receives requests on /*.
     // For example, a request to uniswap.eth/favicon.ico.
@@ -118,9 +203,9 @@ function start(opts = {
             return
         }
 
-        // Resolve ENS to content hash.
-        req.ensName = host
+        // 1) Resolve ENS to content hash.
         const ensName = host
+        req.ensName = ensName
         try {
             console.time(req.path)
             req.ensData = await resolveENS(ensName);
@@ -130,8 +215,9 @@ function start(opts = {
         }
 
         const { codec, hash, dnsLinkName } = req.ensData
-        console.log('resolveENS', ensName, codec, hash, dnsLinkName)
+        console.log('resolveENS', ensName, codec, hash)
 
+        // 2) Resolve content hash to content.
         let handler = {
             'ipfs-ns': getIpfs,
             'ipns-ns': getIpns,
@@ -146,114 +232,12 @@ function start(opts = {
         }
 
         try {
-            await handler[codec](req, res, next)
+            await handler[codec](req, res, next, opts)
         } catch(err) {
             next(err)
         }
     });
-
-    async function getIpfs(req, res, next) {
-        const cid = req.ensData.hash
-
-        // if (opts.ipfsNode) {
-        //     const ipfsPath = `/ipfs/${cid}${req.path || '/'}`
-            
-        //     console.log(req.hostname, `getIpfs`, `local-ipfs`, ipfsPath)
-
-        //     const asyncIterable = opts.ipfsNode.cat(ipfsPath)
-            
-        //     try {
-        //         await streamPipeline(asyncIterable, res);
-        //     } catch(err) {
-        //         next(err)
-        //         return
-        //     }
-
-        //     res.header = gatewayRes.headers.raw()
-        //     res.end()
-        //     return
-        // }
-
-        const ipfsPath = `/ipfs/${cid}${req.path || '/'}`
-        res.setHeader('X-Dappnet-IPFS', `${cid}`);
-
-        try {
-            await proxyToGateway(req, ipfsPath, res)
-            return
-        } catch (err) {
-            return next(err)
-        }
-    }
-
-    async function getIpns(req, res, next) {
-        let ipfsPath
-
-        // Resolve the IPNS CID.
-        const { dnsLinkName } = req.ensData
-        if (dnsLinkName) {
-            console.time(`resolveDNSLink(${dnsLinkName})`)
-            cid = await resolveDNSLink(dnsLinkName)
-            console.timeEnd(`resolveDNSLink(${dnsLinkName})`)
-            ipfsPath = `/ipfs/${cid}${req.path || '/'}`
-
-            // TODO: DNSLink resolution assumes only IPFS content here.
-            res.setHeader('X-Dappnet-IPFS', `${cid}`);
-            
-            req.ipnsData = {
-                ipfsPath
-            }
-        } else {
-            const pubkeyHash = req.ensData.hash
-            const ipnsPath = `/ipns/${pubkeyHash}${req.path || '/'}`
-            ipfsPath = await resolveIPNS(opts.ipfsNode, ipnsPath)
-
-            res.setHeader('X-Dappnet-IPNS', `${ipnsPath}`);
-            // TODO: ugly temp hack.
-            
-            const cid = (new URL("http://example-ipfs-path-only-for-testing.com" + ipfsPath)).pathname.split('/')[2] // part after /ipfs/
-            res.setHeader('X-Dappnet-IPFS', `${cid}`);
-
-            req.ipnsData = {
-                ipfsPath
-            }
-        }
-
-        try {
-            await proxyToGateway(req, ipfsPath, res)
-            return
-        } catch (err) {
-            return next(err)
-        }
-    }
-
-    const proxyToGateway = async (req, ipfsPath, res) => {
-        const gatewayRewrite = `${getIpfsGateway()}${ipfsPath}`
-
-        console.log(req.hostname, gatewayRewrite)
-        let gatewayRes = await fetch(
-            gatewayRewrite,
-            // 10MB
-            { highWaterMark: 10 * 1024 * 1024 }
-        )
-
-        // TODO: make this smart later.
-        const headers = `Accept-Ranges Content-Length Content-Type X-Ipfs-Path X-Ipfs-Roots Date`.split(' ')
-        const gatewayHeaders = gatewayRes.headers.raw()
-        // console.log(gatewayRes.headers)
-
-        headers.map(name => {
-            const lowercaseName = name.toLowerCase()
-            if (!gatewayHeaders[lowercaseName]) return
-            // TODO these are all lowercase.
-            const val = gatewayHeaders[lowercaseName][0]
-            res.setHeader(name, val)
-        })
-
-        await streamPipeline(gatewayRes.body, res);
-        // res.send(gatewayRes.body)
-
-        res.end()
-    }
+    
 
     function errorHandler(err, req, res, next) {
         if (res.headersSent) {
@@ -288,7 +272,6 @@ function start(opts = {
 
     httpsServer.listen(PROXY_PORT_HTTPS, async () => {
         console.log(`Proxy server listening on https://localhost:${PROXY_PORT_HTTPS}`)
-
         // await preload('app.ens.eth')
         // await preload('uniswap.eth')
         // await preload('tornadocash.eth')
@@ -315,10 +298,7 @@ function start(opts = {
         //     }
         // })
         // Return IPFS headers.
-
     })
-
-
 }
 
 function preload(ensName) {
@@ -331,6 +311,11 @@ function preload(ensName) {
         console.debug('fetch', err)
     })
 }
+
+// 
+// Error pages.
+// 
+
 
 const pageStyles = `
 html {

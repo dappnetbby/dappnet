@@ -1,6 +1,24 @@
 local-gateway
 =============
 
+This is an IPFS HTTP gateway which resolves ENS domains to IPFS content ID's, and proxies requests to an IPFS node which returns the underlying content. It automagically generates SSL certificates for all requests, on-the-fly.
+
+For example, for `kwenta.eth`, a request is a `GET /` with the `Host` header set to `kwenta.eth`. It will resolve `kwenta.eth` to an IPFS content hash, and then load the root file from that bundle. If you are requesting a path on a host, for example, `https://kwenta.eth/favicon.ico`, you can query this by setting the path to `/favicon.ico`, and the `Host` remains as `kwenta.eth`.
+
+## Usage.
+
+```sh
+npm i
+npm run start
+```
+
+## Testing the gateway locally.
+
+```
+curl --header "Host: kwenta.eth" http://127.0.0.1:10422 & curl --header "Host: ens.eth" http://127.0.0.1:10422 & curl --header "Host: tornadocashcommunity.eth" http://127.0.0.1:10422
+```
+
+
 ## Tools.
 
 Resolving ENS using `utils/ens.js`:

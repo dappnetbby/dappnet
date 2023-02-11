@@ -1,3 +1,7 @@
+// 
+// Performs notarization of the Dappnet app for macOS.
+// 
+
 require('dotenv').config();
 const { notarize } = require('electron-notarize');
 

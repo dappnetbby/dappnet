@@ -15,6 +15,9 @@ This was originally based off [chrome-bit-domain-extension](https://github.com/T
 ```sh
 cp .env.example .env
 # Insert your extension store API keys if need be.
+
+# Install from package-lock.json. Very important.
+npm ci
 ```
 
 ## Build.

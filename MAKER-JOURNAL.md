@@ -18,6 +18,7 @@ iterations and things I had to learn:
 - how to generate wildcard CA's, ON-THE-FLY for .eth? (hint: SNI)
 - how to generate wildcard CA's, ON-THE-FLY, for .eth, in JS so it's cross-platform?
 - writing up an installation guide for v1 - https://gist.github.com/liamzebedee/963b5a704e47db0d34541cc0477cc587
+- figuring out the bullshit that is macOS notarization and signing. using electorn-sign, then forge sign, etc
 - debugging macos security perms for arm64 vs. amd64.
 - installing a certificate authority on macOS.
 - installing the cert as part of the UI (click a button after install).
@@ -38,4 +39,6 @@ iterations and things I had to learn:
 - tried building .eth browsing into the client as a proxy (worked)
 - dappnet:// URI scheme became useful for opening apps outside of client
 - started playing with building in a wallet / rpc provider.
-- figuring out verifiable rpc
+- speccing out verifiable rpc for ens names
+- writing an implementation - https://github.com/liamzebedee/eth-verifiable-rpc
+- certificates expired. bugfix so certificates have dynamic expiry date. had to learn about esoteric certificate time formats (not documented ugh).

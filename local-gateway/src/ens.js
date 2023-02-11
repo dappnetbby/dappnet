@@ -222,7 +222,7 @@ async function resolveIPNS(ipfsHttpClient, ipnsPath) {
             new Promise((resolve, reject) => {
                 setTimeout(() => {
                     reject(new Error("Timed out resolving IPNS path."))
-                }, 1000 * 8)
+                }, 1000 * 15)
             })
         ])
 

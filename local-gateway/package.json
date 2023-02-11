@@ -31,5 +31,8 @@
   },
   "devDependencies": {
     "yargs": "^17.5.1"
+  },
+  "volta": {
+    "node": "18.14.0"
   }
 }
