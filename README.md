@@ -1,7 +1,9 @@
 dappnet
 =======
 
-![image](https://user-images.githubusercontent.com/584141/190630673-3aea2cd3-0f41-46d3-a06a-84c1f7da3e1b.png) [Documentation](https://liamzebedee.gitbook.io/dappnet/)
+![image](https://user-images.githubusercontent.com/584141/190630673-3aea2cd3-0f41-46d3-a06a-84c1f7da3e1b.png) 
+
+[Documentation](https://liamzebedee.gitbook.io/dappnet/) &middot; [Discord](https://discord.gg/mZUK6reQwT) &middot; [Twitter](https://twitter.com/dappnetbby)
 
 ## What is Dappnet?
 
