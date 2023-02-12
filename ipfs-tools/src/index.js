@@ -82,7 +82,17 @@ async function deploy(argv) {
 
 
     // Now publish the directory
-    const files = glob.sync(resolve(join(dir, '/**/*')))
+    console.log(resolve(dir))
+    console.log(join(resolve(dir), '/**/*'))
+    const files = glob.sync(join(resolve(dir), '/**/*'))
+    console.log(files)
+
+    // await user input
+    const stdin = process.openStdin()
+    stdin.addListener("data", function(d) {
+        console.log("you entered: [" + d.toString().trim() + "]");
+    });
+
     // console.log(`Files:`)
     // console.log(files)
 

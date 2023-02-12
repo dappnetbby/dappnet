@@ -12,6 +12,9 @@ const { promisify } = require('node:util')
 const streamPipeline = promisify(pipeline);
 const { CID } = require('multiformats/cid')
 
+
+const IPFSHttpClient = require('ipfs-http-client');
+
 const {
     testENS,
     resolveENS,
@@ -149,6 +152,7 @@ const getIpfsGateway = () => {
 const proxyToGateway = async (req, ipfsPath, res) => {
     const gatewayRewrite = `${getIpfsGateway()}${ipfsPath}`
     // console.log(req.hostname, gatewayRewrite)
+    console.log('gateway-rewrite', gatewayRewrite)
 
     let gatewayRes = await fetch(
         gatewayRewrite,
@@ -157,15 +161,7 @@ const proxyToGateway = async (req, ipfsPath, res) => {
     )
 
     // Transfer the headers from the request.
-    const headers = `Accept-Ranges Cache-Control Etag Content-Length Last-Modified Content-Type Content-Disposition Content-Length Content-Range Accept-Ranges X-Ipfs-Path X-Ipfs-Roots X-Content-Type-Options Date`.split(' ')
-    const gatewayHeaders = gatewayRes.headers.raw()
-    headers.map(name => {
-        const lowercaseName = name.toLowerCase()
-        if (!gatewayHeaders[lowercaseName]) return
-        // TODO these are all lowercase.
-        const val = gatewayHeaders[lowercaseName][0]
-        res.setHeader(name, val)
-    })
+    // const headers = `Accept-Ranges Cache-Control Etag Content-Length Last-Modified Content-Disposition Content-Length Content-Range Accept-Ranges X-Ipfs-Path X-Ipfs-Roots X-Content-Type-Options Date`.split(' ')
 
     // Stream the response.
     await streamPipeline(gatewayRes.body, res);
@@ -178,6 +174,12 @@ function start(opts = {
 }) {
     console.log(opts)
     const app = express();
+
+    if (opts.ipfsNode == null) {
+        opts.ipfsNode = IPFSHttpClient.create({
+            url: 'http://127.0.0.1:5001',
+        });
+    }
     
     // Preload DNS endpoints.
     getDNSEndpoints()
