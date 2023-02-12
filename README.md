@@ -13,7 +13,7 @@ The software consists of a desktop app, which bundles a local IPFS node, local E
 
 Currently supports macOS with Chrome/Firefox.
 
-Follow the [install guide](https://liamzebedee.gitbook.io/dappnet/).
+Follow the [install guide](https://liamzebedee.gitbook.io/dappnet/install/guide).
 
 ## Learn more.
 
