@@ -1,7 +1,7 @@
 dappnet
 =======
 
-![image](https://user-images.githubusercontent.com/584141/190630673-3aea2cd3-0f41-46d3-a06a-84c1f7da3e1b.png)
+![image](https://user-images.githubusercontent.com/584141/190630673-3aea2cd3-0f41-46d3-a06a-84c1f7da3e1b.png) [Documentation](https://liamzebedee.gitbook.io/dappnet/)
 
 ## What is Dappnet?
 
@@ -13,12 +13,15 @@ The software consists of a desktop app, which bundles a local IPFS node, local E
 
 Currently supports macOS with Chrome/Firefox.
 
-Follow the [install guide](https://gist.github.com/liamzebedee/b7f71f5006ffeb4580c64f8767568c59).
+Follow the [install guide](https://liamzebedee.gitbook.io/dappnet/).
 
 ## Learn more.
 
- - [Dappnet's architecture](./DESIGN.md).
- - [How to publish a dapp/website to .eth](https://gist.github.com/liamzebedee/53e355430941d9c79b7b5541298801db).
+The Dappnet documentation is officially located [here](https://liamzebedee.gitbook.io/dappnet/), and contributions are welcomed in the [`dappnet-docs` repo](https://github.com/liamzebedee/dappnet-docs).
+
+ - [Dappnet's architecture](https://liamzebedee.gitbook.io/dappnet/overview/technical-architecture).
+ - [Deploying to Dappnet](https://liamzebedee.gitbook.io/dappnet/deploying-to-dappnet/overview).
+ - [Maker journal](./MAKER-JOURNAL.md) - history of the hacks I had to do.
 
 ## Tools.
 

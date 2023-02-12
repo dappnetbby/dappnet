@@ -9,7 +9,7 @@ Dappnet's desktop app is built using the [Electron](https://www.electronjs.org/)
 
 We use Typescript's compiler for a modern JS featureset, and maximise productivity with the JS module ecosystem. A lot of modules for JS are now written using the ESM import syntax, which produces all sorts of issues with tooling. Using `tsc` solves that.
 
-The app is built and published using [Electron Builder](https://www.electron.build/). New versions of the app are published to Github releases, under the `liamzebedee/dappnet` repo. Electron has a built-in updating framework for macOS and Windows, based on a framework called [Squirrel](https://github.com/Squirrel/Squirrel.Mac). We use the [update-electron-app](https://github.com/electron/update-electron-app) module to automatically download and install these updates, and [Hazel](https://github.com/vercel/hazel) as an update server. The update server is contained in [liamzebedee/dappnet-update-server](https://github.com/liamzebedee/dappnet-update-server), and hosted on Vercel.
+The app is built and published using [Electron Builder](https://www.electron.build/). New versions of the app are published to Github releases, under the `liamzebedee/test1717` repo. Electron has a built-in updating framework for macOS and Windows, based on a framework called [Squirrel](https://github.com/Squirrel/Squirrel.Mac). We use the [update-electron-app](https://github.com/electron/update-electron-app) module to automatically download and install these updates, and [Hazel](https://github.com/vercel/hazel) as an update server. The update server is contained in [liamzebedee/dappnet-update-server](https://github.com/liamzebedee/dappnet-update-server), and hosted on Vercel.
 
 The UI for this app, although small, is developed using [Next.js](https://nextjs.org/) and React. It's compiled into a static bundle for distribution. 
 
@@ -18,8 +18,10 @@ The UI for this app, although small, is developed using [Next.js](https://nextjs
 To get developing, you will need to:
 
  - download an ipfs binary.
+ - compile the local socks5 proxy.
  - build the UI.
  - install the certificate authority for .eth.
+ - compile the desktop app (using typescript)
 
 ### 1. Download IPFS binary.
 
@@ -72,9 +74,7 @@ If you haven't already installed it, you will need to add the .eth CA to your Sy
 ```
 
 
-## Develop.
-
-### Developing using `npm`.
+### 5. Compile and run.
 
 Install dependencies:
 
@@ -85,7 +85,7 @@ npm i
 Run:
 
 ```sh
-# Term 1: TypeScript server.
+# Term 1: TypeScript build server.
 npm run watch
 
 # Term 2: Electron app launcher.

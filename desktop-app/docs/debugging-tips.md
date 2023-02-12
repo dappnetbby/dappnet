@@ -1,7 +1,4 @@
-
 # macOS
-
-
 
 ## macOS pkg's.
 
