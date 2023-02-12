@@ -6,7 +6,8 @@
   "scripts": {
     "start": "next",
     "build": "next build && next export",
-    "dev": "next dev"
+    "dev": "next dev",
+    "export": "echo 0"
   },
   "keywords": [],
   "author": "",
