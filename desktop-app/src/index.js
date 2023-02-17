@@ -10,6 +10,7 @@ import * as IPFSHttpClient from 'ipfs-http-client';
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import  net from 'node:net';
 import * as _ from 'lodash'
 import { ipfsConfigForFastTeens } from './ipfs';
 import * as yargs from 'yargs'
@@ -200,15 +201,50 @@ function setupExtension() {
     }
 }
 
+
+function checkPortInUse(port) {
+    return new Promise((resolve, reject) => {
+        const server = net.createServer()
+
+        server.once('error', (err) => {
+            if (err.code === 'EADDRINUSE') {
+                resolve(true)
+            } else {
+                reject(err)
+            }
+        })
+
+        server.once('listening', () => {
+            server.close()
+            resolve(false)
+        })
+
+        server.listen(port)
+    })
+}
+
 function startGateway() {
     if (process.env.DEV_GATEWAY) {
         console.debug('[dev] using local gateway')
         return
     }
-    
-    const appPath = app.getAppPath()
-    const appDataPath = app.getPath('appData')
-    require('./gateway/worker')({ appPath, appDataPath })
+
+    checkPortInUse(10424)
+        .then((isInUse) => {
+            if (isInUse) {
+                console.error('port 10424 is already in use.')
+                process.exit(1)
+            }
+
+            const appPath = app.getAppPath()
+            const appDataPath = app.getPath('appData')
+            require('./gateway/worker')({ appPath, appDataPath })
+
+        })
+        .catch((error) => {
+            console.error("error checking port:", error)
+            process.exit(1)
+        })
 }
 
 function startWallet() {
