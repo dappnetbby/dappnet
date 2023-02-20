@@ -19,7 +19,7 @@ import { app } from 'electron'
 const {
     Worker, isMainThread, parentPort, workerData,
 } = require('node:worker_threads');
-
+const { dialog } = require('electron')
 const featureFlags = require("./feature-flags")
 
 
@@ -229,22 +229,9 @@ function startGateway() {
         return
     }
 
-    checkPortInUse(10424)
-        .then((isInUse) => {
-            if (isInUse) {
-                console.error('port 10424 is already in use.')
-                process.exit(1)
-            }
-
-            const appPath = app.getAppPath()
-            const appDataPath = app.getPath('appData')
-            require('./gateway/worker')({ appPath, appDataPath })
-
-        })
-        .catch((error) => {
-            console.error("error checking port:", error)
-            process.exit(1)
-        })
+    const appPath = app.getAppPath()
+    const appDataPath = app.getPath('appData')
+    require('./gateway/worker')({ appPath, appDataPath })
 }
 
 function startWallet() {
@@ -420,13 +407,28 @@ parseArguments()
 configureAutomaticUpdates()
 configureApp()
 serveUI()
-startGateway()
 
 if (featureFlags.EMBEDDED_WALLET) {
     startWallet()
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+    // Check if Dappnet is already open, by checking the local-gateway port.
+    const dappnetAlreadyOpen = await checkPortInUse(10424)
+    if(dappnetAlreadyOpen) {
+        dialog.showMessageBoxSync(
+            null, 
+            {
+                message: "Dappnet client seems to be already running. Please close the other instance before starting a new one.",
+                type: 'info',
+            }
+        )
+        process.exit(1)
+        return
+    }
+
+
+    startGateway()
     // setupExtension()
     createWindow()
 
