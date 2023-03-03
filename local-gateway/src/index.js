@@ -14,9 +14,6 @@ const { CID } = require('multiformats/cid')
 const chalk = require('chalk');
 
 
-
-const IPFSHttpClient = require('ipfs-http-client');
-
 const {
     testENS,
     resolveENS,
@@ -214,6 +211,7 @@ function start() {
     // Host: uniswap.eth
     // ```
     app.get('/*', async (req, res, next) => {
+        // TODO bugged
         const fullPath = req.hostname + '/' + req.path
         console.time(fullPath)
         log.info(chalk.yellow('GET'), fullPath)
@@ -228,6 +226,52 @@ function start() {
             res.write("localhost says hello!")
             res.end()
             return
+        }
+
+        if(host == 'ipfs.dappnet') {
+            // Match Qm up until the first /
+            console.log(req.params)
+            const hash = req.query.hash
+            if(!hash) {
+                res.write("Invalid IPFS hash")
+                res.end()
+                return
+            }
+
+            console.log(hash)
+            try {
+                const v0 = CID.parse(hash)
+                
+                // v0.toString()
+                //> 'QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n'
+                if(v0 == null) throw new Error("Invalid CID: " + hash)
+                
+                //> 'bafybeihdwdcefgh4dqkjv67uzcmw7ojee6xedzdetojuzjevtenxquvyku'
+                const cidv1 = v0.toV1().toString()
+
+                const redirect = `https://${cidv1}.ipfs.dappnet`
+                console.log(`redirect`, redirect)
+                res.redirect(redirect)
+                res.end()
+                return
+            } catch(err) {
+                return next(err)
+            }
+            
+
+
+        } else if(host.endsWith('.ipfs.dappnet')) {
+            const cid = host.split('.')[0]
+            req.ensData = { hash: cid, codec: "ipfs-ns" }
+
+            const ipfsPath = `/ipfs/${cid}${req.path || '/'}`
+
+            try {
+                await proxyToGateway(req, ipfsPath, res)
+                return
+            } catch (err) {
+                return next(err)
+            }
         }
 
         // 1) Resolve ENS to content hash.

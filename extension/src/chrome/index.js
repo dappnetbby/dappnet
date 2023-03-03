@@ -58,19 +58,30 @@ chrome.proxy.onProxyError.addListener(function (details) {
 chrome.webRequest.onBeforeRequest.addListener(function (details) {
 	const url = new URL(details.url)
 
+	const tlds = '.eth .dappnet .ipfs'.split(' ')
+
 	// Make sure the domain ends with .eth.
-	const tld = url.hostname.slice(-3);
-	if (tld != 'eth') {
-		return;
+	console.log(url.hostname)
+
+	let handledByDappnet = false
+	for(let tld of tlds) {
+		if (url.hostname.endsWith(tld)) handledByDappnet = true
 	}
+	if (!handledByDappnet) return
+
+
+	// const tld = url.hostname.slice(-3);
+	// if (tld != 'eth' || 'tld' != 'ipfs') {
+	// 	return;
+	// }
 
 	// Automatically redirect http:// to https:// URL's for .eth domains.
-	if (url.protocol == 'http:') {
-		url.protocol = 'https:'
-		return {
-			redirectUrl: url.toString()
-		}
-	}
+	// if (url.protocol == 'http:') {
+	// 	url.protocol = 'https:'
+	// 	return {
+	// 		redirectUrl: url.toString()
+	// 	}
+	// }
 
 	// Check if the gateway is up.
 	// try {
@@ -91,9 +102,13 @@ chrome.webRequest.onBeforeRequest.addListener(function (details) {
 	// 		return "DIRECT";
 	// 	}`
 	const pacScript = `function FindProxyForURL(url, host) {
-		if (shExpMatch(host, "*.eth")) {
-			return "${proxy}";
-		}
+		${tlds.map(tld => {
+			return `
+			if (shExpMatch(host, "*${tld}")) {
+				return "${proxy}";
+			}\n`
+		}).join('\n')}
+
 		return "DIRECT";
 	}`
 	// const pacScript = `function FindProxyForURL(url, host) {
@@ -103,7 +118,7 @@ chrome.webRequest.onBeforeRequest.addListener(function (details) {
 	// 		return "DIRECT";
 	// 	}`
 
-	// console.log(pacScript)
+	console.log(pacScript)
 
 	const proxyConfig = {
 		mode: "pac_script",

@@ -446,7 +446,12 @@ where
                 
                 // Check the hostname ends in .eth.
                 // If it ends in .eth, we route to localhost.
-                let addr2 = match req.addr.ends_with(b".eth") {
+                
+                let isEth = req.addr.ends_with(b".eth");
+                let isDappnet = req.addr.ends_with(b".dappnet");
+                let isIpfs = req.addr.ends_with(b".ipfs");
+
+                let addr2 = match (isEth || isDappnet || isIpfs) {
                     true => "localhost".as_bytes().to_vec(),
                     false => req.addr
                 };
