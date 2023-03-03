@@ -84,12 +84,25 @@ chrome.webRequest.onBeforeRequest.addListener(function (details) {
 	// Generate a dynamic PAC script per-host.
 	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Proxy_servers_and_tunneling/Proxy_Auto-Configuration_PAC_file
 	const proxy = `SOCKS5 ${config.socksProxy.host}:${config.socksProxy.port}`
+	// const pacScript = `function FindProxyForURL(url, host) {
+	// 		if (dnsDomainIs(host, "${host}")) {
+	// 			return "${proxy}";
+	// 		}
+	// 		return "DIRECT";
+	// 	}`
 	const pacScript = `function FindProxyForURL(url, host) {
-			if (dnsDomainIs(host, "${host}")) {
-				return "${proxy}";
-			}
-			return "DIRECT";
-		}`
+		if (shExpMatch(host, "*.eth")) {
+			return "${proxy}";
+		}
+		return "DIRECT";
+	}`
+	// const pacScript = `function FindProxyForURL(url, host) {
+	// 		if (dnsDomainIs(host, ".eth")) {
+	// 			return "${proxy}";
+	// 		}
+	// 		return "DIRECT";
+	// 	}`
+
 	// console.log(pacScript)
 
 	const proxyConfig = {
@@ -111,76 +124,76 @@ chrome.webRequest.onBeforeRequest.addListener(function (details) {
 
 
 // run script when a request is about to occur
-chrome.webRequest.onHeadersReceived.addListener(function (details) {
-	const url = new URL(details.url)
-	console.log(url.href)
+// chrome.webRequest.onHeadersReceived.addListener(function (details) {
+// 	const url = new URL(details.url)
+// 	console.log(url.href)
 
-	// Make sure the domain ends with .eth.
-	const tld = url.hostname.slice(-3);
-	if (tld != 'eth') {
-		return;
-	}
+// 	// Make sure the domain ends with .eth.
+// 	const tld = url.hostname.slice(-3);
+// 	if (tld != 'eth') {
+// 		return;
+// 	}
 
-	const { responseHeaders, requestId, timeStamp, tabId } = details
-	// chrome.runtime.sendMessage({
-	// 	type: 'headers',
-	// 	url,
-	// 	headers: responseHeaders,
-	// 	requestId,
-	// 	timeStamp,
-	// 	tabId
-	// })
+// 	const { responseHeaders, requestId, timeStamp, tabId } = details
+// 	// chrome.runtime.sendMessage({
+// 	// 	type: 'headers',
+// 	// 	url,
+// 	// 	headers: responseHeaders,
+// 	// 	requestId,
+// 	// 	timeStamp,
+// 	// 	tabId
+// 	// })
 
-	handleHeaders({
-		type: 'headers',
-		url,
-		headers: responseHeaders,
-		requestId,
-		timeStamp,
-		tabId
-	})
-
-
-}, { urls: ["<all_urls>"] }, ["responseHeaders"]);
+// 	handleHeaders({
+// 		type: 'headers',
+// 		url,
+// 		headers: responseHeaders,
+// 		requestId,
+// 		timeStamp,
+// 		tabId
+// 	})
 
 
-chrome.runtime.onMessage.addListener(
-	function (message, sender, sendResponse) {
-		// console.log(sender.tab ?
-		// 	"from a content script:" + sender.tab.url :
-		// 	"from the extension");
-		messageHandlers[message.type]({ message, sender, sendResponse })
-	}
-);
+// }, { urls: ["<all_urls>"] }, ["responseHeaders"]);
 
 
-const tabStore = {}
-const messageHandlers = {
-	// 'headers': handleHeaders,
-	'getTabHistory': getTabHistory
-}
+// chrome.runtime.onMessage.addListener(
+// 	function (message, sender, sendResponse) {
+// 		// console.log(sender.tab ?
+// 		// 	"from a content script:" + sender.tab.url :
+// 		// 	"from the extension");
+// 		messageHandlers[message.type]({ message, sender, sendResponse })
+// 	}
+// );
 
-function handleHeaders({ tabId, timeStamp, requestId, url, headers }) {
-	// Extract any relevant detail from headers.
-	let dappnetHeaders = headers
-		.filter(({ name, value }) => {
-			// TODO: this strictly does not handle lowercase headers, even though apparently that's spec-compliant.
-			return name.startsWith('X-Dappnet') || name.startsWith('X-Ipfs')
-		})
-	dappnetHeaders = _.fromPairs(dappnetHeaders.map(({ name, value }) => ([name, value])))
 
-	const tab = _.get(tabStore, tabId, [])
-	tab.push({
-		headers: dappnetHeaders,
-		url,
-		timeStamp
-	})
+// const tabStore = {}
+// const messageHandlers = {
+// 	// 'headers': handleHeaders,
+// 	'getTabHistory': getTabHistory
+// }
 
-	tabStore[tabId] = tab
-}
+// function handleHeaders({ tabId, timeStamp, requestId, url, headers }) {
+// 	// Extract any relevant detail from headers.
+// 	let dappnetHeaders = headers
+// 		.filter(({ name, value }) => {
+// 			// TODO: this strictly does not handle lowercase headers, even though apparently that's spec-compliant.
+// 			return name.startsWith('X-Dappnet') || name.startsWith('X-Ipfs')
+// 		})
+// 	dappnetHeaders = _.fromPairs(dappnetHeaders.map(({ name, value }) => ([name, value])))
 
-function getTabHistory({ message, sender, sendResponse }) {
-	const { tabId } = message
-	const tabHistory = _.get(tabStore, tabId, [])
-	sendResponse(tabHistory)
-}
+// 	const tab = _.get(tabStore, tabId, [])
+// 	tab.push({
+// 		headers: dappnetHeaders,
+// 		url,
+// 		timeStamp
+// 	})
+
+// 	tabStore[tabId] = tab
+// }
+
+// function getTabHistory({ message, sender, sendResponse }) {
+// 	const { tabId } = message
+// 	const tabHistory = _.get(tabStore, tabId, [])
+// 	sendResponse(tabHistory)
+// }

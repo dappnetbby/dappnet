@@ -1,1 +1,10 @@
 
+
+class Logger {
+
+    constructor() {}
+
+    info() {
+        
+    }
+}

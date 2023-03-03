@@ -42,3 +42,4 @@ iterations and things I had to learn:
 - speccing out verifiable rpc for ens names
 - writing an implementation - https://github.com/liamzebedee/eth-verifiable-rpc
 - certificates expired. bugfix so certificates have dynamic expiry date. had to learn about esoteric certificate time formats (not documented ugh).
+- figuring out how to make the gateway faster. learning electron process model. trying workers. trying fork/spawn. realising these won't work since ipfs-http-client detects and then requires electron. replacing ipfs-http-client

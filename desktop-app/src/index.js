@@ -15,6 +15,10 @@ import { ipfsConfigForFastTeens } from './ipfs';
 import * as yargs from 'yargs'
 import { dialog, autoUpdater, session } from 'electron';
 import { app } from 'electron'
+import { execPath } from 'node:process';
+import chalk from 'chalk'
+import { fork } from 'child_process'
+
 const {
     Worker, isMainThread, parentPort, workerData,
 } = require('node:worker_threads');
@@ -200,15 +204,63 @@ function setupExtension() {
     }
 }
 
+let processes = []
+
 function startGateway() {
+    const appPath = app.getAppPath()
+    const appDataPath = app.getPath('appData')
+
+
+    const program3 = fork(path.join(__dirname, 'services/ipfs.js'), ['args'], {
+        stdio: 'pipe',
+        env: {
+            APP_PATH: appPath,
+            APP_DATA_PATH: appDataPath,
+            DEV_IPFS: process.env.DEV_IPFS,
+            FORCE_COLOR: true
+        }
+    });
+    processes.push(program3)
+
+    program3.stdout.pipe(process.stdout);
+    program3.stderr.pipe(process.stderr);
+
+
+
+    const program2 = fork(path.join(__dirname, 'services/proxy.js'), ['args'], {
+        stdio: 'pipe',
+        env: {
+            APP_PATH: appPath,
+            APP_DATA_PATH: appDataPath,
+            DEV_IPFS: process.env.DEV_IPFS,
+            FORCE_COLOR: true
+        }
+    });
+    processes.push(program2)
+
+    program2.stdout.pipe(process.stdout);
+    program2.stderr.pipe(process.stderr);
+
+
     if (process.env.DEV_GATEWAY) {
         console.debug('[dev] using local gateway')
         return
     }
-    
-    const appPath = app.getAppPath()
-    const appDataPath = app.getPath('appData')
-    require('./gateway/worker')({ appPath, appDataPath })
+
+    const program1 = fork(path.join(__dirname, 'services/gateway.js'), ['args'], {
+        stdio: 'pipe',
+        env: {
+            APP_PATH: appPath,
+            APP_DATA_PATH: appDataPath,
+            DEV_IPFS: process.env.DEV_IPFS,
+            FORCE_COLOR: true
+        }
+    });
+    processes.push(program1)
+
+    program1.stdout.pipe(process.stdout);
+    program1.stderr.pipe(process.stderr);
+
 }
 
 function startWallet() {
@@ -406,3 +458,10 @@ app.on('window-all-closed', () => {
         app.quit();
     }
 });
+
+// Add a handler for when the process is exiting.
+process.on('exit', function () {
+    processes.forEach(function (proc) {
+        proc.kill();
+    });
+})

@@ -1,7 +1,3 @@
-const {
-    Worker, isMainThread, parentPort, workerData,
-} = require('node:worker_threads');
-
 import * as LocalGateway from '@dappnet/local-gateway';
 import * as LocalSocksProxy from '@dappnet/local-socks5-proxy';
 
@@ -16,23 +12,31 @@ import * as _ from 'lodash';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ipfsConfigForFastTeens } from '../ipfs';
+import chalk from 'chalk'
 
+const runBinary = (cmd, args, env, label) => {
+    console.log(`launching ${chalk.yellow(label)}`)
 
-const runBinary = (cmd, args, env) => {
-    console.debug(`[exec] ${cmd} ${args}`)
+    console.log(`[exec] ${cmd} ${args}`)
     const program = spawn(
         cmd,
         args.split(' '),
-        { env, stdio: 'inherit' }
+        {
+            env: {
+                ...env,
+                FORCE_COLOR: true
+            },
+            stdio: 'pipe'
+        }
     );
 
-    // program.stdout.on('data', (data) => {
-    //     console.log(`[${cmd}] ${data}`);
-    // });
+    program.stdout.on('data', (data) => {
+        console.log(`[${chalk.yellow(label)}] ${data}`);
+    });
 
-    // program.stderr.on('data', (data) => {
-    //     console.error(`[${cmd}] ${data}`);
-    // });
+    program.stderr.on('data', (data) => {
+        console.log(`[${chalk.yellow(label)}] ${data}`);
+    });
 
     program.on('close', (code) => {
         if (code !== 0) {
@@ -48,17 +52,17 @@ async function setupIpfs({ appPath, appDataPath }) {
     const argv = {}
     if (argv['ipfs-node']) {
         gatewayOptions.ipfsNodeURL = arguments_['ipfs-node'];
+    } else if (process.env.DEV_IPFS) {
+        // Do nothing.
+        return {
+            ipfsNodeURL: "http://localhost:5001"
+        }
+
     } else {
         // Start local IPFS node.
-        // const appPath = app.getAppPath()
         const appPathUnpacked = appPath.replace('app.asar', 'app.asar.unpacked')
-        const ipfsBinaryPath = path.join(appPathUnpacked, `/vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs`)
-        // let ipfsPath
-        // if (electronIsDev) {
-        //     ipfsPath = path.join(appPath, `/vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs`)
-        // } else {
-        //     ipfsPath = path.join(asarUnpackedPath, `/vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs`)
-        // }
+        // const ipfsBinaryPath = path.join(appPathUnpacked, `/vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs`)
+        const ipfsBinaryPath = path.join(appPathUnpacked, `/vendor/ipfs/go-ipfs_v0.18.2_darwin-arm64/ipfs`)
 
         console.log(`appPathUnpacked`, appPathUnpacked)
         console.log('execPath', process.execPath);
@@ -73,6 +77,7 @@ async function setupIpfs({ appPath, appDataPath }) {
         // Location of the ipfs data directory, which is ordinarily ~/.ipfs.
         const IPFS_PATH = path.join(userDataDir, '/.ipfs/')
         const IPFS_CONFIG_PATH = join(IPFS_PATH, '/config')
+
         const env = { IPFS_PATH }
 
         console.log(`IPFS_PATH`, IPFS_PATH)
@@ -82,7 +87,7 @@ async function setupIpfs({ appPath, appDataPath }) {
             console.log(`IPFS: no config, initializing the node`)
 
             // Initialize IPFS, creating a config file.
-            spawnSync(ipfsBinaryPath, [`init`], { env, stdio: 'inherit' })
+            spawnSync(ipfsBinaryPath, [`init`], { env, stdio: 'pipe' })
 
             // Sanity check it worked.
             if (!existsSync(IPFS_CONFIG_PATH)) {
@@ -115,7 +120,7 @@ async function setupIpfs({ appPath, appDataPath }) {
 
 
         console.log(`IPFS: starting the daemon`)
-        runBinary(ipfsBinaryPath, `daemon --stream-channels --enable-namesys-pubsub --enable-gc --manage-fdlimit`, env)
+        runBinary(ipfsBinaryPath, `daemon`, env, 'ipfs')
     }
 
     const enableLocalIpfsNode = false;
@@ -136,7 +141,7 @@ async function setupIpfs({ appPath, appDataPath }) {
             },
         });
         const id = await ipfsNode.id();
-        console.log(id);
+        // console.log(id);
 
         // const ipfsPath = "/ipfs/QmTau1nKy3axaPKU866BWkf8CfaiKrMYWXC5sVUVpJRSgW/"
         // async function thing() {
@@ -150,68 +155,23 @@ async function setupIpfs({ appPath, appDataPath }) {
         gatewayOptions.ipfsNode = ipfsNode;
     }
 
-    // NOTE: this is used in the gateway for IPNS resolution.
-    // Do not remove.
-    const enableLocalIpfsHttpClient = true;
-    if (enableLocalIpfsHttpClient) {
-        const ipfsNode = IPFSHttpClient.create({
-            url: 'http://127.0.0.1:5001',
-        });
-        gatewayOptions.ipfsNode = ipfsNode;
-        gatewayOptions.ipfsNodeURL = 'http://localhost:5001';
-    }
-
     return { gatewayOptions };
 }
 
-const startLocalSocksProxyRust = ({ appPath }) => {
-    // cargo run -- --no-auth --port 6801
-    const appPathUnpacked = appPath.replace('app.asar', 'app.asar.unpacked')
-    const binaryPath = path.join(appPathUnpacked, `/vendor/local-proxy/merino`)
-    runBinary(binaryPath, `--no-auth --port 6801`, {})
-}
-
-const LocalSocksProxyRust = {
-    start: startLocalSocksProxyRust
-}
-
-async function main() {
-    const { appPath, appDataPath } = workerData
+async function main({ appPath, appDataPath }) {
+    console.log(`APP_PATH:`, appPath)
+    console.log(`APP_DATA_PATH:`, appDataPath)
 
     // Setup the IPFS node.
     const { gatewayOptions } = await setupIpfs({ appPath, appDataPath });
-    // TODO kill on exit.
-
-    // Launch the .eth/IPFS gateway.
-    const ensGateway = LocalGateway.start(gatewayOptions);
-    
-    // Launch SOCKS5 proxy server.
-    // LocalSocksProxy.start()
-    LocalSocksProxyRust.start({ appPath })
-    // TODO kill on exit.
 }
 
-
-if (isMainThread) {
-    module.exports = function (workerData) {
-        const worker = new Worker(__filename, {
-            workerData,
-        });
-
-        return worker
-
-        // return new Promise((resolve, reject) => {
-        //     const worker = new Worker(__filename, {
-        //         workerData,
-        //     });
-        //     worker.on('message', resolve);
-        //     worker.on('error', reject);
-        //     worker.on('exit', (code) => {
-        //         if (code !== 0)
-        //             reject(new Error(`Worker stopped with exit code ${code}`));
-        //     });
-        // });
-    };
-} else {
-    main()
+// Started from CLI.
+const { APP_PATH, APP_DATA_PATH } = process.env
+const config = {
+    appPath: APP_PATH,
+    appDataPath: APP_DATA_PATH
 }
+main(config).catch(err => {
+    throw err
+})

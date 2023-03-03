@@ -4,6 +4,7 @@ const contentHash = require('content-hash')
 const { namehash } = require("@ethersproject/hash")
 const ethers = require('ethers')
 const bs58 = require('bs58')
+const fetch = require('node-fetch')
 
 // Provider setup.
 const provider = new ethers.providers.CloudflareProvider()
@@ -27,8 +28,37 @@ const ENSResolver = new ethers.Contract(
     provider
 )
 
+// https://github.com/mds1/multicall
+const ETHEREUM_MULTICALL_ADDRESS = `0xcA11bde05977b3631167028862bE2a173976CA11`
+const Multicall = new ethers.Contract(
+    ETHEREUM_MULTICALL_ADDRESS,
+    [
+        // https://github.com/mds1/multicall
+        'function aggregate(tuple(address target, bytes callData)[] calls) payable returns (uint256 blockNumber, bytes[] returnData)',
+        'function aggregate3(tuple(address target, bool allowFailure, bytes callData)[] calls) payable returns (tuple(bool success, bytes returnData)[] returnData)',
+        'function aggregate3Value(tuple(address target, bool allowFailure, uint256 value, bytes callData)[] calls) payable returns (tuple(bool success, bytes returnData)[] returnData)',
+        'function blockAndAggregate(tuple(address target, bytes callData)[] calls) payable returns (uint256 blockNumber, bytes32 blockHash, tuple(bool success, bytes returnData)[] returnData)',
+        'function getBasefee() view returns (uint256 basefee)',
+        'function getBlockHash(uint256 blockNumber) view returns (bytes32 blockHash)',
+        'function getBlockNumber() view returns (uint256 blockNumber)',
+        'function getChainId() view returns (uint256 chainid)',
+        'function getCurrentBlockCoinbase() view returns (address coinbase)',
+        'function getCurrentBlockDifficulty() view returns (uint256 difficulty)',
+        'function getCurrentBlockGasLimit() view returns (uint256 gaslimit)',
+        'function getCurrentBlockTimestamp() view returns (uint256 timestamp)',
+        'function getEthBalance(address addr) view returns (uint256 balance)',
+        'function getLastBlockHash() view returns (bytes32 blockHash)',
+        'function tryAggregate(bool requireSuccess, tuple(address target, bytes callData)[] calls) payable returns (tuple(bool success, bytes returnData)[] returnData)',
+        'function tryBlockAndAggregate(bool requireSuccess, tuple(address target, bytes callData)[] calls) payable returns (uint256 blockNumber, bytes32 blockHash, tuple(bool success, bytes returnData)[] returnData)',
+    ],
+    provider
+)
+
+// The Public Resolver.
+const DEFAULT_ENS_RESOLVER = `0x4976fb03C32e5B8cfe2b6cCB31c09Ba78EBaBa41`
+
 // Test the ENS integration.
-async function testENS() {
+async function testENS() {    
     let resolver = await provider.getResolver('uniswap.eth')
     // ethers.js is broken for the uniswap.eth hash at this time. 
     // And the ensjs docs are out-of-sync. Goddamit.
@@ -81,21 +111,49 @@ const NAMESPACE_IPNS = 0xe5
 const CONTENT_TYPE_DAG_PB = 0x70
 const IDENTITY_FN = 0x00
 
+// Resolves ENS domains to content hashes.
+// Does this optimistically - if the resolver is the default resolver, we can
+// resolve the content hash without making any additional calls.
 async function resolveENS(name) {
     let cached = ensCache.get(name)
     if(cached) return cached
 
     console.time(`ens.getResolver(${name})`)
-    const resolver = await provider.getResolver(name)
-    if (!resolver) {
-        throw new Error(`ENS name doesn't exist: ${name}`)
-    }
-    console.timeEnd(`ens.getResolver(${name})`)
-
     console.time(`resolver.getContentHash(${name})`)
-    // let hash = await resolver.getContentHash()
-    const contentHashHex = await resolver._fetchBytes("0xbc1c58d1");
-    console.timeEnd(`resolver.getContentHash(${name})`)
+
+    const namehash = ethers.utils.namehash(name)
+
+    const calls = [
+        [DEFAULT_ENS_RESOLVER, ENSResolver.interface.encodeFunctionData("contenthash", [namehash])],
+        [ENSRegistry.address, ENSRegistry.interface.encodeFunctionData("resolver", [namehash])]
+    ]
+
+    const [_, results] = await Multicall.callStatic.aggregate(calls)
+    const [defaultResolverContentHash$, resolverAddr$] = results
+
+    // Now decode the return data.
+    const defaultResolverContentHash = ENSResolver.interface.decodeFunctionResult("contenthash", defaultResolverContentHash$)[0]
+    const resolverAddr = ENSRegistry.interface.decodeFunctionResult("resolver", resolverAddr$)[0]
+
+    let contentHashHex = defaultResolverContentHash
+    if(resolverAddr != DEFAULT_ENS_RESOLVER) {
+        // Lookup content hash from custom resolver.
+        const resolver = await provider.getResolver(name)
+        console.timeEnd(`ens.getResolver(${name})`)
+
+        if (!resolver) {
+            console.timeEnd(`resolver.getContentHash(${name})`)
+            throw new Error(`ENS name doesn't exist: ${name}`)
+        }
+
+        // let hash = await resolver.getContentHash()
+        contentHashHex = await resolver._fetchBytes("0xbc1c58d1");
+        console.timeEnd(`resolver.getContentHash(${name})`)
+    } else {
+        console.timeEnd(`ens.getResolver(${name})`)
+        console.timeEnd(`resolver.getContentHash(${name})`)
+    }
+
     if (contentHashHex == '0x') return {
         codec: null,
         hash: null
@@ -210,15 +268,50 @@ const ipnsCache = new Cache({
     expiry: 1000 * 60 * 60 // 1hr
 })
 
-async function resolveIPNS(ipfsHttpClient, ipnsPath) {
+async function resolveIPNS(ipfsNodeApiUrl, ipnsPath) {
     // Check cache.
     let cached = ipnsCache.get(ipnsPath)
     if (cached) return cached
 
     try {
+        const resolveIpnsLink = async ({ path }) => {
+            const baseUrl = `${ipfsNodeApiUrl}/api/v0/resolve`
+            const params = new URLSearchParams({
+                arg: path,
+                recursive: true
+            })
+            const url = baseUrl + '?' + params.toString()
+            
+            console.debug(url)
+
+            const res = await fetch(url, {
+                method: 'POST',
+            })
+
+            // if(res.status !== 200) {
+            //     console.error("Error resolving IPNS path: " + res.statusText)
+            // }
+
+            const data = await res.json()
+
+            if(res.status != 200) {
+                console.debug(data)
+
+                if (data.Message.includes("no link named")) {
+                    console.debug("No link under IPNS path.")
+                    return null
+                } else {
+                    throw new Error("Error resolving IPNS path: " + JSON.stringify(data))
+                }
+            }
+
+            return data.Path
+        }
+
         // Race the two.
         const ipfsPathRoot = await Promise.race([
-            ipfsHttpClient.resolve(ipnsPath, { recursive: true }),
+            resolveIpnsLink({ path: ipnsPath }),
+            
             new Promise((resolve, reject) => {
                 setTimeout(() => {
                     reject(new Error("Timed out resolving IPNS path."))
@@ -226,9 +319,14 @@ async function resolveIPNS(ipfsHttpClient, ipnsPath) {
             })
         ])
 
-        // const ipfsPathRoot = await ipfsHttpClient.resolve(ipnsPath, { recursive: true })
-        // console.log(ipfsPathRoot)
-        const value = ipfsPathRoot
+        if(!ipfsPathRoot) {
+            return null
+        }
+
+        // NOTE: data.Path does not return the path with a trailing slash "/",
+        // although if we pass this to the IPFS Gateway, it will return us a page which says
+        // "Moved Permanently.". Hence we add the slash here.
+        const value = ipfsPathRoot + '/'
 
         // Insert into cache.
         ipnsCache.put(ipnsPath, value)

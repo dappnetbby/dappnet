@@ -22,10 +22,9 @@ const release = require('../../package.json').version
 
 function Home() {
     const apps = [
-        // 'Uniswap, uniswap', 
+        // 'Uniswap, uniswap',
         'Kwenta, kwenta',
-        'ENS, ens', 
-        'Tornado Cash, tornadocashcommunity'
+        'ENS, ens',
     ]
 
     return <div className='container'>
