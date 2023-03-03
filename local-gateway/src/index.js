@@ -429,7 +429,7 @@ const noContentForENSNamePage = ({ req, err, ensName }) => {
             <small>Dappnet</small>
             <h2>There was no content found for ${ensName}</h2>
             <p>The content hash was empty.</p>
-            <p>If you're the owner of this name, you can <a href="https://app.ens.eth/#/name/${ensName}/details">configure it here</a> on ENS.
+            <p>If you're the owner of this name, you can <a href="https://app.ens.domains/name/${ensName}">configure it here</a> on ENS.
         </div>
     </body>
 </html>
