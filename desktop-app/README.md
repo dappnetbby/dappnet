@@ -29,13 +29,13 @@ The desktop app bundles a local IPFS node, which you will have to download the b
 
 ```sh
 cd vendor/
-wget https://dist.ipfs.tech/go-ipfs/v0.13.0/go-ipfs_v0.13.0_darwin-amd64.tar.gz
-tar -xvzf go-ipfs_v0.13.0_darwin-amd64.tar.gz
+wget https://dist.ipfs.tech/go-ipfs/v0.18.2/go-ipfs_v0.18.2_darwin-amd64.tar.gz
+tar -xvzf go-ipfs_v0.18.2_darwin-amd64.tar.gz
 chmod +x go-ipfs/ipfs
-mkdir -p ./ipfs/go-ipfs_v0.13.0_darwin-amd64/
-mv go-ipfs/ipfs ./ipfs/go-ipfs_v0.13.0_darwin-amd64/
+mkdir -p ./ipfs/go-ipfs_v0.18.2_darwin-amd64/
+mv go-ipfs/ipfs ./ipfs/go-ipfs_v0.18.2_darwin-amd64/
 # cleanup
-rm -rf go-ipfs go-ipfs_v0.13.0_darwin-amd64.tar.gz
+rm -rf go-ipfs go-ipfs_v0.18.2_darwin-amd64.tar.gz
 ```
 
 ### 2. Compile the local SOCKS5 proxy.
