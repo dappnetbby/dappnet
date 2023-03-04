@@ -11,7 +11,7 @@ import * as IPFSHttpClient from 'ipfs-http-client';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import * as _ from 'lodash'
-import { ipfsConfigForFastTeens } from './ipfs';
+import { ipfsConfigForFastTeens } from './ipfs-configs/ipfs';
 import * as yargs from 'yargs'
 import { dialog, autoUpdater, session } from 'electron';
 import { app } from 'electron'
@@ -32,8 +32,8 @@ const featureFlags = require("./feature-flags")
 // 
 
 function printBanner() {
-    console.log(`dappnet v${app.getVersion()}`)
-    console.log(`Do what you think is great work.`)
+    console.log(chalk.blueBright(`Dappnet v${app.getVersion()}`))
+    console.log(chalk.blue(`Do what you think is great work.`))
     console.log(``)
     console.log(``)
 }
@@ -83,9 +83,12 @@ function configureAutomaticUpdates() {
         // autoUpdater.checkForUpdates()
     }
 
-    const log = console.log
+    const log = function() {
+        console.log(chalk.yellow(`[updater]`), chalk.gray(...arguments))
+    }
+
     autoUpdater.on('error', function () {
-        console.log(arguments)
+        log(chalk.red(arguments))
     })
 
     autoUpdater.on('error', err => {
@@ -131,7 +134,8 @@ function configureAutomaticUpdates() {
 // 
 
 function parseArguments() {
-    console.log(process.argv);
+    console.log(chalk.gray(process.argv.join(', ')))
+    console.log()
 
     // require('yargs')
     //     .scriptName("dappnet")
