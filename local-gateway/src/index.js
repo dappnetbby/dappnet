@@ -257,8 +257,6 @@ function start() {
             } catch(err) {
                 return next(err)
             }
-            
-
 
         } else if(host.endsWith('.ipfs.dappnet')) {
             const cid = host.split('.')[0]
