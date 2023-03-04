@@ -33,7 +33,7 @@ const featureFlags = require("./feature-flags")
 
 function printBanner() {
     console.log(`dappnet v${app.getVersion()}`)
-    console.log(`Do what you think is based work.`)
+    console.log(`Do what you think is great work.`)
     console.log(``)
     console.log(``)
 }

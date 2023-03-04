@@ -1,7 +1,7 @@
 {
   "name": "@dappnet/desktop-app",
-  "version": "1.5.1",
-  "description": "log in, scroll up, get silly",
+  "version": "1.6.0",
+  "description": "",
   "main": "build/src/index.js",
   "scripts": {
     "build": "tsc",
