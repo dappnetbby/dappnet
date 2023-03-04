@@ -31,6 +31,7 @@ const config = {
     appPath: APP_PATH,
     appDataPath: APP_DATA_PATH
 }
+
 main(config).catch(err => {
     throw err
 })
