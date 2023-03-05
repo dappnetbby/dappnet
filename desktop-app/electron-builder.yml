@@ -66,7 +66,7 @@ mac:
 
   # binaries Array<String> | “undefined” - Paths of any extra binaries that need to be signed.
   binaries:
-   - vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs
+   - vendor/ipfs/kubo_v0.18.1_darwin-amd64/ipfs
    - vendor/local-proxy/merino
   #  - /Users/liamz/Documents/Projects/dappnet/desktop-app/dist/mac-arm64/Dappnet.app/vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs
   #  - vendor/ipfs/go-ipfs_v0.13.0_${platform}-${arch}/ipfs

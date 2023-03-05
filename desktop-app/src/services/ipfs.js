@@ -22,7 +22,8 @@ async function setupIpfs({ appPath, appDataPath }) {
 
     // Locate the ipfs binary.
     const appPathUnpacked = appPath.replace('app.asar', 'app.asar.unpacked')
-    const ipfsBinaryPath = path.join(appPathUnpacked, `/vendor/ipfs/go-ipfs_v0.18.2_darwin-arm64/ipfs`)
+    // TODO swap to arm64.
+    const ipfsBinaryPath = path.join(appPathUnpacked, `/vendor/ipfs/kubo_v0.18.1_darwin-amd64/ipfs`)
 
     console.log(`appPathUnpacked`, appPathUnpacked)
     console.log('execPath', process.execPath);

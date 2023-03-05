@@ -14,5 +14,8 @@
   "license": "ISC",
   "dependencies": {
     "next": "^12.2.5"
+  },
+  "volta": {
+    "node": "16.19.1"
   }
 }
