@@ -3,13 +3,16 @@
 const {
     DEV_IPFS,
     DEV_UI,
-    DEV_GATEWAY
+    DEV_GATEWAY,
+    OPEN_IN_SYSTEM_BROWSER
 } = process.env
 
 export const env = {
     DEV_IPFS,
     DEV_UI,
-    DEV_GATEWAY
+    DEV_GATEWAY,
+    
+    OPEN_IN_DEFAULT_BROWSER
 }
 
 // Feature flags.
