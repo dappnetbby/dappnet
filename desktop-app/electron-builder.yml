@@ -6,11 +6,11 @@ protocols:
  - name: "Dappnet URL"
    schemes: ["dappnet"]
 
-compression: store
+compression: normal
 asarUnpack:
  - vendor/
 
-afterSign: scripts/notarize.js
+afterSign: scripts/mac/notarize.js
 
 publish:
   provider: github

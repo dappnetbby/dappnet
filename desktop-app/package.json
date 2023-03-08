@@ -1,7 +1,7 @@
 {
   "name": "@dappnet/desktop-app",
   "version": "1.6.0",
-  "description": "",
+  "description": "The Dappnet desktop client.",
   "main": "build/src/index.js",
   "scripts": {
     "build": "tsc",
@@ -12,7 +12,7 @@
     "pack": "electron-builder",
     "build-ui": "cd ./ui && npm run build && npm run export && cd ..",
     "pack:testing": "SKIP_NOTARIZE=1 electron-builder -c.compression=store --dir --mac --arm64",
-    "publish": "NODE_ENV=production npm run build-ui && npm run build && electron-builder --publish always"
+    "publish": "NODE_ENV=production npm run build-ui && npm run build && electron-builder --publish never"
   },
   "keywords": [],
   "author": "",
@@ -20,6 +20,7 @@
   "devDependencies": {
     "@electron/osx-sign": "^1.0.1",
     "@types/chalk": "^2.2.0",
+    "@types/lodash": "^4.14.185",
     "asar": "^3.2.0",
     "electron": "^20.1.4",
     "electron-builder": "^23.6.0",
@@ -30,24 +31,18 @@
     "@dappnet/local-gateway": "file:../local-gateway",
     "@dappnet/local-socks5-proxy": "file:../local-socks5-proxy",
     "@ethersproject/experimental": "^5.7.0",
-    "@types/lodash": "^4.14.185",
     "chalk": "^4.1.2",
     "electron-is-dev": "^2.0.0",
     "electron-notarize": "^1.2.2",
     "electron-serve": "^1.1.0",
-    "electron-squirrel-startup": "^1.0.0",
-    "electron-updater": "^5.2.1",
     "ethers": "^5.7.2",
-    "ipfs-http-client": "^56.0.2",
     "lodash": "^4.17.21",
-    "pino": "^8.10.0",
     "shelljs": "^0.8.5",
     "simple-args-parser": "^1.0.1",
     "source-map-support": "^0.5.21",
-    "update-electron-app": "^2.0.1",
     "yargs": "^17.6.2"
   },
   "volta": {
-    "node": "16.19.1"
+    "node": "18.14.2"
   }
 }

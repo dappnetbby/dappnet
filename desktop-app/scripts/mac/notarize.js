@@ -6,8 +6,21 @@ require('dotenv').config();
 const { notarize } = require('electron-notarize');
 
 exports.default = async function notarizing(context) {
+    // TODO: I don't even think it actually runs this script.
+    // LOL.
     if(process.env.SKIP_NOTARIZE) {
         return
+    }
+    
+    const {
+        APPLEID,
+        APPLEIDPASS,
+        APPLETEAMID,
+    } = process.env;
+
+    if (!APPLEID || !APPLEIDPASS || !APPLETEAMID) {
+        throw new Error('missing environment variables: APPLEID, APPLEIDPASS, APPLETEAMID');
+        return;
     }
 
     const { electronPlatformName, appOutDir } = context;
@@ -16,6 +29,7 @@ exports.default = async function notarizing(context) {
     }
 
     const appName = context.packager.appInfo.productFilename;
+
 
     return await notarize({
         tool: 'notarytool',

@@ -1,6 +1,8 @@
 ## Future.
 
-Replace the SOCKS5 proxy with a HTTP proxy in the gateway itself.
+ * Improve gateway/proxy performance.
+ * IPFS links in-browser.
+ * IPFS monitoring stats - # seeders etc.
 
 ## Unreleased.
 

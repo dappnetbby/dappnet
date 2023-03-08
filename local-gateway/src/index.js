@@ -212,7 +212,7 @@ function start() {
     // ```
     app.get('/*', async (req, res, next) => {
         // TODO bugged
-        const fullPath = req.hostname + '/' + req.path
+        const fullPath = `${req.hostname}${req.path || '/'}`
         console.time(fullPath)
         log.info(chalk.yellow('GET'), fullPath)
 
@@ -343,12 +343,6 @@ function start() {
 
     httpsServer.listen(PROXY_PORT_HTTPS, async () => {
         log.info(`Gateway proxy server listening on https://localhost:${PROXY_PORT_HTTPS}`)
-        // await preload('app.ens.eth')
-        // await preload('uniswap.eth')
-        // await preload('tornadocash.eth')
-        // await preload('vitalik.eth')
-        // await preload('rollerskating.eth')
-        // await preload('liamz.eth')
     })
 
     // HTTP.

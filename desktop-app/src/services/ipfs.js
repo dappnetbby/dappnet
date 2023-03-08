@@ -5,7 +5,6 @@ import * as path from 'node:path';
 import * as sourceMap from 'source-map-support';
 sourceMap.install();
 
-import * as IPFSHttpClient from 'ipfs-http-client';
 
 import * as _ from 'lodash';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';

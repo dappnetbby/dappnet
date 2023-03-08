@@ -6,7 +6,6 @@ import {spawn, spawnSync} from 'node:child_process';
 import {app, BrowserWindow, ipcMain, MessageChannelMain, shell} from 'electron';
 import electronIsDev from 'electron-is-dev';
 import serve from 'electron-serve';
-import * as IPFSHttpClient from 'ipfs-http-client';
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -19,11 +18,12 @@ import { execPath } from 'node:process';
 import chalk from 'chalk'
 import { fork } from 'child_process'
 
+
 const {
     Worker, isMainThread, parentPort, workerData,
 } = require('node:worker_threads');
 
-const featureFlags = require("./feature-flags")
+const { featureFlags, env } = require("./config")
 
 
 
@@ -220,7 +220,7 @@ function startGateway() {
         env: {
             APP_PATH: appPath,
             APP_DATA_PATH: appDataPath,
-            DEV_IPFS: process.env.DEV_IPFS,
+            DEV_IPFS: env.DEV_IPFS,
             FORCE_COLOR: true
         }
     });
@@ -236,7 +236,6 @@ function startGateway() {
         env: {
             APP_PATH: appPath,
             APP_DATA_PATH: appDataPath,
-            DEV_IPFS: process.env.DEV_IPFS,
             FORCE_COLOR: true
         }
     });
@@ -246,7 +245,7 @@ function startGateway() {
     program2.stderr.pipe(process.stderr);
 
 
-    if (process.env.DEV_GATEWAY) {
+    if (env.DEV_GATEWAY) {
         console.debug('[dev] using local gateway')
         return
     }
@@ -254,9 +253,6 @@ function startGateway() {
     const program1 = fork(path.join(__dirname, 'services/gateway.js'), ['args'], {
         stdio: 'pipe',
         env: {
-            APP_PATH: appPath,
-            APP_DATA_PATH: appDataPath,
-            DEV_IPFS: process.env.DEV_IPFS,
             FORCE_COLOR: true
         }
     });
@@ -417,7 +413,7 @@ async function createWindow() {
     }
 
 
-    if (process.env.DEV_UI) {
+    if (env.DEV_UI) {
         console.debug('[dev] using local dappnet UI')
         await mainWindow.loadURL('http://localhost:3000');
         // await mainWindow.loadURL('app://-');
