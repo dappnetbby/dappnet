@@ -24,10 +24,11 @@ function Home() {
     const apps = [
         // 'Uniswap, uniswap',
         'Kwenta, kwenta.eth, /kwenta.jpg',
-        'ENS, ens.eth, /ens.jpg',
-        '1inch, 1inch.eth, https://1inch.io/img/favicon/safari-pinned-tab.svg',
-        'Compound, compoundprotocol.eth, https://compound.finance/images/compound-192.png',
+        'ENS, app.ens.eth, /ens.jpg',
+        '1inch, 1inch.eth, /1inch.svg',
+        'Compound, compoundprotocol.eth, /compound.png',
         'Curve, curve.eth, /curve.png',
+        "Vitalik's blog, vitalik.eth, /vitalik.png",
         // 'Liquity, lusd.eth, http://lusd.eth/',
     ]
 
