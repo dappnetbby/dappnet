@@ -8,7 +8,15 @@
 
 set -ex
 
-cd data/
+# Get the data directory from the first argument.
+DATA_DIR=$1
+
+# Set the default for DATA_DIR to be "data/"
+if [ -z "$DATA_DIR" ]; then
+    DATA_DIR="data/"
+fi
+
+cd $DATA_DIR
 
 # Check if ca.key exists, if so, confirm delete
 if [ -f "ca.crt" ] || [ -f "ca.key" ]; then

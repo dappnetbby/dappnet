@@ -17,34 +17,49 @@ echo $1
 # Full path to the installation destination. For example: /Applications
 # echo /Applications
 echo $2
-ls /Applications/Dappnet.app/
+# ls /Applications/Dappnet.app/
 
 # Installation volume (or mount point) to receive the payload. For example: /Volumes/Tools
 # echo /
 echo $3
 
 
+
+
+
+DAPPNET_APP_PATH=$2/Dappnet.app
+DAPPNET_DATA_DIR=$DAPPNET_APP_PATH/data
+
+# If the data dir doesn't already exist, create it.
+if [ ! -d "$DAPPNET_DATA_DIR" ]; then
+    mkdir $DAPPNET_DATA_DIR
+    echo 1 > $DAPPNET_DATA_DIR/.version
+fi
+
+
+
 # 
-# Generate the new root CA.
+# 1. Generate the new root CA.
 # 
 
 echo Creating CA...
 
-# /Users/liamz/Documents/Projects/dappnet/desktop-app/dist/mac/Dappnet.app/Contents/Resources/app.asar.unpacked/node_modules/@dappnet/local-gateway/dappnet-ca
-DAPPNET_APP_PATH=$2/Dappnet.app
+# Create the new CA.
 cd $DAPPNET_APP_PATH/Contents/Resources/app.asar.unpacked/node_modules/@dappnet/local-gateway/dappnet-ca/
-./create-ca.sh
+./create-ca.sh $DAPPNET_DATA_DIR
 
 
-# Add the Dappnet root CA to the system Keychain for macOS.
+# 
+# 2. Install the CA.
+# 
+
+# Adds the Dappnet root CA to the system Keychain for macOS.
 # This CA signs all *.eth domains.
-
 echo Installing CA...
-CERT=`pwd`/data/ca.crt
-# lol: macOS doesn't have realpath installed by default. tragic
-
-# osascript -e 'display alert "Dappnet installation!" message "longer text can be added in the message field and it will be all shown on the pop-up alert."'
+CERT=$DAPPNET_DATA_DIR/ca.crt
 
 # This is verified to work on macOS 12.5.1 (21G83).
 sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain $CERT
 sudo security verify-cert -c $CERT
+
+# osascript -e 'display alert "Dappnet installation!" message "longer text can be added in the message field and it will be all shown on the pop-up alert."'
