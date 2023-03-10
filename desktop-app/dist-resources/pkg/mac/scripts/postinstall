@@ -5,35 +5,43 @@ set -ex
 
 # https://macinstallers.blogspot.com/2012/07/scripting-in-installer-packages.html
 
+# Full path to the installation script.
+# echo /tmp/PKInstallSandbox.F3mBsD/Scripts/eth.dappnet.olG78f/postinstall
+echo $0
+ls $0
+
+# Full path to the installation package the Installer application is processing
+# echo /Users/liamz/Documents/Projects/dappnet/desktop-app/dist/Dappnet-1.6.0-arm64.pkg
+echo $1
+
+# Full path to the installation destination. For example: /Applications
+# echo /Applications
+echo $2
+ls /Applications/Dappnet.app/
+
+# Installation volume (or mount point) to receive the payload. For example: /Volumes/Tools
+# echo /
+echo $3
+
+
+# 
+# Generate the new root CA.
+# 
+
+echo Creating CA...
+
+# /Users/liamz/Documents/Projects/dappnet/desktop-app/dist/mac/Dappnet.app/Contents/Resources/app.asar.unpacked/node_modules/@dappnet/local-gateway/dappnet-ca
+DAPPNET_APP_PATH=$2/Dappnet.app
+cd $DAPPNET_APP_PATH/Contents/Resources/app.asar.unpacked/node_modules/@dappnet/local-gateway/dappnet-ca/
+./create-ca.sh
+
 
 # Add the Dappnet root CA to the system Keychain for macOS.
 # This CA signs all *.eth domains.
 
-# ca.crt
-export CERT=./cert
-cat > $CERT <<- EOM
------BEGIN CERTIFICATE-----
-MIIDYzCCAkugAwIBAgIUSdrmdUAssUHMpIEsnMQcvP7WjmcwDQYJKoZIhvcNAQEL
-BQAwQTELMAkGA1UEBhMCVVMxEzARBgNVBAoMCkRhcHBuZXQgQ0ExHTAbBgNVBAMM
-FERhcHBuZXQgY2VydGlmaWNhdGVzMB4XDTIzMDEzMTIzNTY0MVoXDTMzMDEyODIz
-NTY0MVowQTELMAkGA1UEBhMCVVMxEzARBgNVBAoMCkRhcHBuZXQgQ0ExHTAbBgNV
-BAMMFERhcHBuZXQgY2VydGlmaWNhdGVzMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A
-MIIBCgKCAQEAv3UMIqK3Owb5XLswRtfIbonoi+kNZFuEbixnNIhKQJ/0J77YM4oq
-GUwL4h8uzYdKp6AsvKZcOlI1FK+4sEsdpLXnkKgYS3FSWatBkfKRBk4MYYTyWgft
-mM/3rv4nc6WRJb4+LZsLJVSkUY5NM6d3fpPfc5pMyuCjLFSCBBUnnfkoaaSfscMF
-hiQg2LGeZJzc3879SN50NWqNvOT1yuPXOnqDyM3eMDy4MLXN9qTDjol5Znjpr0UK
-LnQcTB4Zu25QKpxREmW8fd0ehJqV6NgxQzVUDyWRj0ZjQvQ7t9AAzpqeMZmRNVfB
-YvUsXkmZAa96lD/3He6wrdyDkQrTCmsTmQIDAQABo1MwUTAdBgNVHQ4EFgQUv4/O
-ydYqwyuPoRa2JCdTW9cUvwwwHwYDVR0jBBgwFoAUv4/OydYqwyuPoRa2JCdTW9cU
-vwwwDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEAGWHDdM1QdeAJ
-uEa+3GwiKAiL6ZYJQCYLytWoR5BA4XpVH5E+Pv/+j90GtBJSVNbhJiQM4gtJu6qC
-YQF/51V+br7/qnJJxE06nR53HJhRQRh19OjMhyEsew6tXg9YTqnOSV3ZoBeJzjXb
-PyBsQAUDv8KZXSQqIjgE6+tTKxJHLB07TBHwWYma5bEEfNbi0ZCLgG6JClq2SlyW
-NrJkGq0uaQ4vRm/Ks2GGl/ix0LJCVjosEan7oH5BoyoFLO1n9MFiPDJk0TIK3Dxf
-B38Jgu3nG59bSa+poOobzik1oj1+1j72yMsZka8+b0N5IfPvBAZ/6Dl4zcdSFXP/
-hNAShhfIZg==
------END CERTIFICATE-----
-EOM
+echo Installing CA...
+CERT=`pwd`/data/ca.crt
+# lol: macOS doesn't have realpath installed by default. tragic
 
 # osascript -e 'display alert "Dappnet installation!" message "longer text can be added in the message field and it will be all shown on the pop-up alert."'
 

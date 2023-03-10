@@ -3,21 +3,27 @@
 # Generates your own Certificate Authority for development.
 # This script should be executed just once.
 
+# NOTE: This script is written for the macOS PackageInstaller sandbox environment.
+# There are implicit dependencies here on the macOS environment.
+
 set -ex
+
+cd data/
 
 # Check if ca.key exists, if so, confirm delete
 if [ -f "ca.crt" ] || [ -f "ca.key" ]; then
     echo -e "\e[41mCertificate Authority files already exist!\e[49m"
+    exit 0
     
-    # confirm delete
-    read -p "Do you want to delete them? [y/N] " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        rm ca.key ca.pubkey ca.crt
-    else
-        echo "Aborting..."
-        exit 1
-    fi
+    # # confirm delete
+    # read -p "Do you want to delete them? [y/N] " -n 1 -r
+    # echo
+    # if [[ $REPLY =~ ^[Yy]$ ]]; then
+    #     rm ca.key ca.pubkey ca.crt
+    # else
+    #     echo "Aborting..."
+    #     exit 1
+    # fi
 fi
 
 # Generate private key
@@ -33,7 +39,4 @@ openssl rsa -in ca.key -pubout > ca.pubkey
 openssl rsa -in ca.key -out ca.2.key
 
 # Convert certificate to a format usable by Firefox.
-openssl pkcs12 -export -in server.crt -inkey server.key -out server.p12
-
-# Dump cert/keys to a .json, for import by the gateway.
-python dump_cert.py > dappnet-ca.json
+openssl pkcs12 -export -in ca.crt -inkey ca.key -out ca.p12 -passout pass:/dev/null

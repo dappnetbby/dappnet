@@ -23,6 +23,7 @@ const {
 } = require('./ens')
 
 const { 
+    loadCertificateAuthorityData,
     generateCertificate,
     generateCertificateOpenSSL
 } = require('./certificates');
@@ -196,9 +197,11 @@ const proxyToGateway = async (req, ipfsPath, res) => {
     })
 }
 
-function start() {
+function start({ dappnetCADataPath }) {
     const app = express();
     
+    loadCertificateAuthorityData(dappnetCADataPath)
+
     // Preload DNS endpoints.
     getDNSEndpoints()
     // testENS()

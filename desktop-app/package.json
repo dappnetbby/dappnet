@@ -11,7 +11,7 @@
     "clean": "rm -rf dist/*",
     "pack": "electron-builder",
     "build-ui": "cd ./ui && npm run build && npm run export && cd ..",
-    "pack:testing": "SKIP_NOTARIZE=1 electron-builder -c.compression=store --dir --mac --arm64",
+    "pack:testing": "SKIP_NOTARIZE=1 electron-builder -c.compression=store --dir --mac pkg",
     "publish": "NODE_ENV=production npm run build-ui && npm run build && electron-builder --publish always"
   },
   "keywords": [],

@@ -9,6 +9,7 @@ protocols:
 compression: normal
 asarUnpack:
  - vendor/
+ - node_modules/@dappnet/local-gateway/
 
 afterSign: scripts/mac/notarize.js
 
@@ -68,10 +69,7 @@ mac:
   binaries:
    - vendor/ipfs/kubo_v0.18.1_darwin-amd64/ipfs
    - vendor/local-proxy/merino
-  #  - /Users/liamz/Documents/Projects/dappnet/desktop-app/dist/mac-arm64/Dappnet.app/vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs
-  #  - vendor/ipfs/go-ipfs_v0.13.0_${platform}-${arch}/ipfs
-  #  - vendor/ipfs/go-ipfs_v0.13.0_darwin-amd64/ipfs
-
+  
   category: public.app-category.tools
 
 dmg:
@@ -87,6 +85,10 @@ dmg:
 
 pkg:
   scripts: ./pkg/mac/scripts/
+  
+  # Ensure packages are only installed at /Applications
+  # See BundleIsRelocatable
+  isRelocatable: false
 
 
 # -----------------

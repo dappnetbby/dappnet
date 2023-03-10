@@ -1,5 +1,7 @@
 const { KJUR } = require('jsrsasign')
 const rs = require('jsrsasign')
+const { readFileSync } = require('fs')
+const { join } = require('path')
 
 let cache = {}
 
@@ -11,7 +13,27 @@ const dateToGeneralizedTime = (date) => {
     return str
 }
 
-const dappnetCA = require('../dev-certificates/dappnet-ca.json')
+
+let dappnetCA
+// const dappnetCA = require('../dev-certificates/dappnet-ca.json')
+
+function loadCertificateAuthorityData(path) {
+    console.log(`Loading certificate authority data from ${path}`)
+    if(!path.length) throw new Error('No path provided to loadCertificateAuthorityData')
+
+    const cert = readFileSync(join(path, '/ca.crt'), 'utf8')
+    console.log(cert)
+    const pubkey = readFileSync(join(path, '/ca.pubkey'), 'utf8')
+    const privkey = readFileSync(join(path, '/ca.key'), 'utf8')
+    
+    dappnetCA = {
+        cert,
+        pubkey,
+        prvkey: privkey
+    }
+}
+
+
 
 function generateCertificate(domain) {
     if (cache[domain]) return cache[domain]
@@ -56,7 +78,7 @@ function generateCertificate(domain) {
 
     let x509 = new rs.X509();
     x509.readCertPEM(dappnetCA.cert);
-    authorityKeyIdentifier = x509.getExtAuthorityKeyIdentifier();
+    // authorityKeyIdentifier = x509.getExtAuthorityKeyIdentifier();
     // console.log(authorityKeyIdentifier)
 
 
@@ -72,7 +94,7 @@ function generateCertificate(domain) {
         sbjpubkey: pub,
         sbjprvkey: prv,
         ext: [
-            authorityKeyIdentifier,
+            // authorityKeyIdentifier,
             {
                 extname: "basicConstraints",
                 critical: false,
@@ -202,6 +224,7 @@ echo -e "  - run \e[93mcreate-certificate.sh example.com\e[39m"
 // }
 
 module.exports = {
+    loadCertificateAuthorityData,
     generateCertificate,
     generateCertificateOpenSSL
 }

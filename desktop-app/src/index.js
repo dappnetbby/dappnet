@@ -253,6 +253,8 @@ function startGateway() {
     const program1 = fork(path.join(__dirname, 'services/gateway.js'), ['args'], {
         stdio: 'pipe',
         env: {
+            APP_PATH: appPath,
+            APP_DATA_PATH: appDataPath,
             FORCE_COLOR: true
         }
     });
