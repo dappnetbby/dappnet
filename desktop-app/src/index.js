@@ -10,6 +10,7 @@ import * as IPFSHttpClient from 'ipfs-http-client';
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import  net from 'node:net';
 import * as _ from 'lodash'
 import { ipfsConfigForFastTeens } from './ipfs';
 import * as yargs from 'yargs'
@@ -18,7 +19,7 @@ import { app } from 'electron'
 const {
     Worker, isMainThread, parentPort, workerData,
 } = require('node:worker_threads');
-
+const { dialog } = require('electron')
 const featureFlags = require("./feature-flags")
 
 
@@ -200,12 +201,34 @@ function setupExtension() {
     }
 }
 
+
+function checkPortInUse(port) {
+    return new Promise((resolve, reject) => {
+        const server = net.createServer()
+
+        server.once('error', (err) => {
+            if (err.code === 'EADDRINUSE') {
+                resolve(true)
+            } else {
+                reject(err)
+            }
+        })
+
+        server.once('listening', () => {
+            server.close()
+            resolve(false)
+        })
+
+        server.listen(port)
+    })
+}
+
 function startGateway() {
     if (process.env.DEV_GATEWAY) {
         console.debug('[dev] using local gateway')
         return
     }
-    
+
     const appPath = app.getAppPath()
     const appDataPath = app.getPath('appData')
     require('./gateway/worker')({ appPath, appDataPath })
@@ -384,13 +407,28 @@ parseArguments()
 configureAutomaticUpdates()
 configureApp()
 serveUI()
-startGateway()
 
 if (featureFlags.EMBEDDED_WALLET) {
     startWallet()
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+    // Check if Dappnet is already open, by checking the local-gateway port.
+    const dappnetAlreadyOpen = await checkPortInUse(10424)
+    if(dappnetAlreadyOpen) {
+        dialog.showMessageBoxSync(
+            null, 
+            {
+                message: "Dappnet client seems to be already running. Please close the other instance before starting a new one.",
+                type: 'info',
+            }
+        )
+        process.exit(1)
+        return
+    }
+
+
+    startGateway()
     // setupExtension()
     createWindow()
 
