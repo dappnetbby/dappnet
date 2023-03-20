@@ -22,10 +22,9 @@
     "proxy",
     "tabs",
     "activeTab",
-    "webRequest",
-    "webRequestBlocking"
+    "webRequest"
   ],
   "host_permissions": [
-    "*://*/*"
+    "<all_urls>"
   ]
 }

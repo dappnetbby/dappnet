@@ -9,11 +9,19 @@ const _ = require('lodash')
 // }
 
 chrome.proxy.onProxyError.addListener(function (details) {
-	console = chrome.extension.getBackgroundPage().console;
-
 	console.error(details.details)
 	console.error(details.error)
 })
+
+// Automatically redirect http:// to https:// URL's for .eth domains.
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  const url = new URL(tab.url)
+  
+  if (url.protocol === 'http:' && url.hostname.endsWith('.eth')) {
+    const newUrl = url.href.replace('http://', 'https://');
+    chrome.tabs.update(tabId, { url: newUrl });
+  }
+});
 
 // const proxyPacScript = `
 // function FindProxyForURL(url, host) {
@@ -75,14 +83,6 @@ chrome.webRequest.onBeforeRequest.addListener(function (details) {
 	// 	return;
 	// }
 
-	// Automatically redirect http:// to https:// URL's for .eth domains.
-	// if (url.protocol == 'http:') {
-	// 	url.protocol = 'https:'
-	// 	return {
-	// 		redirectUrl: url.toString()
-	// 	}
-	// }
-
 	// Check if the gateway is up.
 	// try {
 	// 	await fetch(`http://127.0.0.1:6801`)
@@ -135,7 +135,7 @@ chrome.webRequest.onBeforeRequest.addListener(function (details) {
 	return;
 
 
-}, { urls: ["<all_urls>"] }, ["blocking"]);
+}, { urls: ["<all_urls>"] });
 
 
 // run script when a request is about to occur
