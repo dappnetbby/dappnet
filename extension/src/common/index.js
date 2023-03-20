@@ -1,5 +1,6 @@
 const socksProxy = {
-    host: 'localhost',
+    host: '0.0.0.0',
+    // host: 'host.docker.internal',
     port: 6801
 }
 

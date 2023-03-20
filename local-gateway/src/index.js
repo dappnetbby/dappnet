@@ -1,6 +1,6 @@
 const fs = require('fs')
-const http = require('http');
-const https = require('https');
+const http = require('node:http');
+const https = require('node:https');
 const express = require('express');
 const fetch = require('node-fetch')
 const shell = require('shelljs');
@@ -11,9 +11,8 @@ const { pipeline } = require('node:stream')
 const { promisify } = require('node:util')
 const streamPipeline = promisify(pipeline);
 const { CID } = require('multiformats/cid')
+const chalk = require('chalk');
 
-
-const IPFSHttpClient = require('ipfs-http-client');
 
 const {
     testENS,
@@ -24,12 +23,35 @@ const {
 } = require('./ens')
 
 const { 
+    loadCertificateAuthorityData,
     generateCertificate,
     generateCertificateOpenSSL
 } = require('./certificates');
 
 const PROXY_PORT_HTTP = 10422
 const PROXY_PORT_HTTPS = 10424
+const IPFS_NODE_API_URL = `http://127.0.0.1:5001`
+
+// Logging.
+class Logger {
+    constructor() {}
+
+    info() {
+        const time = new Date().toISOString()
+        console.log(chalk.gray(`[${time}]`) + ' ' + chalk.white(...arguments))
+    }
+
+    debug() {
+        const time = new Date().toISOString()
+        console.log(chalk.gray(`[${time}]`) + ' ' + chalk.gray(...arguments))
+    }
+
+    error() {
+        console.log(chalk.gray(`[${time}]`) + ' ' + chalk.red(...arguments))
+    }
+}
+
+const log = new Logger()
 
 
 function timeoutAfter(seconds) {
@@ -90,7 +112,7 @@ async function getIpfs(req, res, next) {
 }
 
 
-async function getIpns(req, res, next, opts) {
+async function getIpns(req, res, next) {
     let ipfsPath
 
     // 1) Resolve the IPNS CID.
@@ -120,7 +142,10 @@ async function getIpns(req, res, next, opts) {
         // Construct an /ipns/ path and then forward it for resolution.
         const pubkeyHash = req.ensData.hash
         const ipnsPath = `/ipns/${pubkeyHash}${req.path || '/'}`
-        ipfsPath = await resolveIPNS(opts.ipfsNode, ipnsPath)
+        ipfsPath = await resolveIPNS(IPFS_NODE_API_URL, ipnsPath)
+        if (ipfsPath === null) {
+            throw new Error("IPNS path not found:", ipnsPath)
+        }
 
         res.setHeader('X-Dappnet-IPNS', `${ipnsPath}`);
         
@@ -149,38 +174,34 @@ const getIpfsGateway = () => {
     return 'http://127.0.0.1:8080'
 }
 
+const gatewayAgent = new http.Agent({
+    keepAlive: true, 
+    maxSockets: 1000,
+});
+
+http.globalAgent = gatewayAgent
+
 const proxyToGateway = async (req, ipfsPath, res) => {
-    const gatewayRewrite = `${getIpfsGateway()}${ipfsPath}`
-    // console.log(req.hostname, gatewayRewrite)
-    console.log('gateway-rewrite', gatewayRewrite)
+    const gatewayUrl = `${getIpfsGateway()}${ipfsPath}`
 
-    let gatewayRes = await fetch(
-        gatewayRewrite,
-        // 10MB
-        { highWaterMark: 10 * 1024 * 1024 }
-    )
+    // Get the ENS domain.
+    const domain = req.hostname
+    log.info(chalk.yellow('proxyToGateway'), req.hostname, gatewayUrl)
 
-    // Transfer the headers from the request.
-    // const headers = `Accept-Ranges Cache-Control Etag Content-Length Last-Modified Content-Disposition Content-Length Content-Range Accept-Ranges X-Ipfs-Path X-Ipfs-Roots X-Content-Type-Options Date`.split(' ')
+    http.get(gatewayUrl, async (gatewayRes) => {
+        // Transfer the headers from the response.
+        res.writeHead(gatewayRes.statusCode, gatewayRes.headers);
 
-    // Stream the response.
-    await streamPipeline(gatewayRes.body, res);
-
-    res.end()
+        // Stream the response.
+        gatewayRes.pipe(res)
+    })
 }
 
-function start(opts = {
-    ipfsNode: null
-}) {
-    console.log(opts)
+function start({ dappnetCADataPath }) {
     const app = express();
-
-    if (opts.ipfsNode == null) {
-        opts.ipfsNode = IPFSHttpClient.create({
-            url: 'http://127.0.0.1:5001',
-        });
-    }
     
+    loadCertificateAuthorityData(dappnetCADataPath)
+
     // Preload DNS endpoints.
     getDNSEndpoints()
     // testENS()
@@ -193,6 +214,11 @@ function start(opts = {
     // Host: uniswap.eth
     // ```
     app.get('/*', async (req, res, next) => {
+        // TODO bugged
+        const fullPath = `${req.hostname}${req.path || '/'}`
+        console.time(fullPath)
+        log.info(chalk.yellow('GET'), fullPath)
+
         res.setHeader('X-Dappnet-Gateway', require('../package.json').version);
 
         const host = req.hostname
@@ -203,6 +229,50 @@ function start(opts = {
             res.write("localhost says hello!")
             res.end()
             return
+        }
+
+        if(host == 'ipfs.dappnet') {
+            // Match Qm up until the first /
+            console.log(req.params)
+            const hash = req.query.hash
+            if(!hash) {
+                res.write("Invalid IPFS hash")
+                res.end()
+                return
+            }
+
+            console.log(hash)
+            try {
+                const v0 = CID.parse(hash)
+                
+                // v0.toString()
+                //> 'QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n'
+                if(v0 == null) throw new Error("Invalid CID: " + hash)
+                
+                //> 'bafybeihdwdcefgh4dqkjv67uzcmw7ojee6xedzdetojuzjevtenxquvyku'
+                const cidv1 = v0.toV1().toString()
+
+                const redirect = `https://${cidv1}.ipfs.dappnet`
+                console.log(`redirect`, redirect)
+                res.redirect(redirect)
+                res.end()
+                return
+            } catch(err) {
+                return next(err)
+            }
+
+        } else if(host.endsWith('.ipfs.dappnet')) {
+            const cid = host.split('.')[0]
+            req.ensData = { hash: cid, codec: "ipfs-ns" }
+
+            const ipfsPath = `/ipfs/${cid}${req.path || '/'}`
+
+            try {
+                await proxyToGateway(req, ipfsPath, res)
+                return
+            } catch (err) {
+                return next(err)
+            }
         }
 
         // 1) Resolve ENS to content hash.
@@ -217,7 +287,7 @@ function start(opts = {
         }
 
         const { codec, hash, dnsLinkName } = req.ensData
-        console.log('resolveENS', ensName, codec, hash)
+        log.info(chalk.yellow('resolveENS'), ensName, `/${codec}/${hash}/`)
 
         // 2) Resolve content hash to content.
         let handler = {
@@ -234,9 +304,11 @@ function start(opts = {
         }
 
         try {
-            await handler[codec](req, res, next, opts)
+            await handler[codec](req, res, next)
         } catch(err) {
             next(err)
+        } finally {
+            console.timeEnd(fullPath)
         }
     });
     
@@ -264,7 +336,7 @@ function start(opts = {
         res.status(500).send(errorPage({ err, req, ensName }))
     })
 
-    const httpsServer = require('https').Server({
+    const httpsServer = https.Server({
         // key/cert unused here. This is just so we ca instantiate the server.
         // They are later dynamically generated using the SNICallback.
         key: fs.readFileSync(__dirname + '/../certs/kwenta.eth.key', 'utf8'),
@@ -273,19 +345,13 @@ function start(opts = {
     }, app);
 
     httpsServer.listen(PROXY_PORT_HTTPS, async () => {
-        console.log(`Proxy server listening on https://localhost:${PROXY_PORT_HTTPS}`)
-        // await preload('app.ens.eth')
-        // await preload('uniswap.eth')
-        // await preload('tornadocash.eth')
-        // await preload('vitalik.eth')
-        // await preload('rollerskating.eth')
-        // await preload('liamz.eth')
+        log.info(`Gateway proxy server listening on https://localhost:${PROXY_PORT_HTTPS}`)
     })
 
     // HTTP.
     const httpServer = http.createServer(app);
     httpServer.listen(PROXY_PORT_HTTP, () => {
-        console.log(`Proxy server listening on http://localhost:${PROXY_PORT_HTTP}`)
+        log.info(`Gateway proxy server listening on http://localhost:${PROXY_PORT_HTTP}`)
     })
 
     const apiServer = express();
@@ -358,7 +424,7 @@ const noContentForENSNamePage = ({ req, err, ensName }) => {
             <small>Dappnet</small>
             <h2>There was no content found for ${ensName}</h2>
             <p>The content hash was empty.</p>
-            <p>If you're the owner of this name, you can <a href="https://app.ens.eth/#/name/${ensName}/details">configure it here</a> on ENS.
+            <p>If you're the owner of this name, you can <a href="https://app.ens.domains/name/${ensName}">configure it here</a> on ENS.
         </div>
     </body>
 </html>

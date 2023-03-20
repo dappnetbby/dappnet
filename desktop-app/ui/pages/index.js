@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 
 const App = ({ config }) => {
-    const [name, ensHost] = config.split(', ')
-    const url = `https://${ensHost}.eth/`
+    const [name, ensHost, imagePath] = config.split(', ')
+    const url = `https://${ensHost}/`
 
     const onClick = () => {
         const a = document.createElement('a')
@@ -13,7 +13,7 @@ const App = ({ config }) => {
     }
 
     return <div className={'app'} onClick={onClick}>
-        <img src={`${ensHost}.jpg`}/>
+        <img src={imagePath}/>
         <div className='name'>{name}</div>
     </div>
 }
@@ -22,10 +22,14 @@ const release = require('../../package.json').version
 
 function Home() {
     const apps = [
-        // 'Uniswap, uniswap', 
-        'Kwenta, kwenta',
-        'ENS, ens', 
-        'Tornado Cash, tornadocashcommunity'
+        // 'Uniswap, uniswap',
+        'Kwenta, kwenta.eth, /kwenta.jpg',
+        'ENS, app.ens.eth, /ens.jpg',
+        '1inch, 1inch.eth, /1inch.svg',
+        'Compound, compoundprotocol.eth, /compound.png',
+        'Curve, curve.eth, /curve.png',
+        "Vitalik's blog, vitalik.eth, /vitalik.png",
+        // 'Liquity, lusd.eth, http://lusd.eth/',
     ]
 
     return <div className='container'>
@@ -39,7 +43,7 @@ function Home() {
             </div>
 
             <footer>
-                Dappnet {release} &middot; The Times 03/Jan/2009 Chancellor on brink of second bailout for banks.
+                Dappnet {release}
             </footer>
         </main>
     </div>

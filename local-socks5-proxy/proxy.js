@@ -10,11 +10,17 @@ const HOST = '0.0.0.0';
 const PORT = '6801';
 
 server = socks.createServer(function (socket, port, address, proxy_ready) {
-  // console.log(port, address)
   let host = address
+  console.log(host)
 
-  let tld = host.slice(-3);
-  if (tld == 'eth') {
+  // let tld = host.slice(-3);
+  const tlds = 'eth dappnet ipfs'.split(' ')
+  let handledByDappnet = false
+  for (let tld of tlds) {
+    if (host.endsWith(tld)) handledByDappnet = true
+  }
+
+  if (handledByDappnet) {
     // Fetch from the local gateway.
     address = 'localhost'
 

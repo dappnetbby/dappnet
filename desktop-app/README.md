@@ -9,7 +9,7 @@ Dappnet's desktop app is built using the [Electron](https://www.electronjs.org/)
 
 We use Typescript's compiler for a modern JS featureset, and maximise productivity with the JS module ecosystem. A lot of modules for JS are now written using the ESM import syntax, which produces all sorts of issues with tooling. Using `tsc` solves that.
 
-The app is built and published using [Electron Builder](https://www.electron.build/). New versions of the app are published to Github releases, under the `liamzebedee/test1717` repo. Electron has a built-in updating framework for macOS and Windows, based on a framework called [Squirrel](https://github.com/Squirrel/Squirrel.Mac). We use the [update-electron-app](https://github.com/electron/update-electron-app) module to automatically download and install these updates, and [Hazel](https://github.com/vercel/hazel) as an update server. The update server is contained in [liamzebedee/dappnet-update-server](https://github.com/liamzebedee/dappnet-update-server), and hosted on Vercel.
+The app is built and published using [Electron Builder](https://www.electron.build/). New versions of the app are published to Github releases, under the `liamzebedee/test1717` repo. Electron has a built-in updating framework for macOS and Windows, based on a framework called [Squirrel](https://github.com/Squirrel/Squirrel.Mac). We use electron's [autoUpdater](https://github.com/electron/update-electron-app) module to automatically download and install these updates, and [Hazel](https://github.com/vercel/hazel) as an update server. The update server is contained in [liamzebedee/dappnet-update-server](https://github.com/liamzebedee/dappnet-update-server), and hosted on Vercel.
 
 The UI for this app, although small, is developed using [Next.js](https://nextjs.org/) and React. It's compiled into a static bundle for distribution. 
 
@@ -28,14 +28,7 @@ To get developing, you will need to:
 The desktop app bundles a local IPFS node, which you will have to download the binary for.
 
 ```sh
-cd vendor/
-wget https://dist.ipfs.tech/go-ipfs/v0.13.0/go-ipfs_v0.13.0_darwin-amd64.tar.gz
-tar -xvzf go-ipfs_v0.13.0_darwin-amd64.tar.gz
-chmod +x go-ipfs/ipfs
-mkdir -p ./ipfs/go-ipfs_v0.13.0_darwin-amd64/
-mv go-ipfs/ipfs ./ipfs/go-ipfs_v0.13.0_darwin-amd64/
-# cleanup
-rm -rf go-ipfs go-ipfs_v0.13.0_darwin-amd64.tar.gz
+./scripts/vendor/get-ipfs.sh
 ```
 
 ### 2. Compile the local SOCKS5 proxy.
@@ -89,7 +82,7 @@ Run:
 npm run watch
 
 # Term 2: Electron app launcher.
-npm run start
+npm run dev
 ```
 
 ### Testing the `.app`.
@@ -135,7 +128,7 @@ cp .env.example .env
 Now publish.
 
 ```sh
-. .env
+source .env
 npm run publish
 ```
 

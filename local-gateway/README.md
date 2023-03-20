@@ -7,6 +7,14 @@ For example, for `kwenta.eth`, a request is a `GET /` with the `Host` header set
 
 ## Usage.
 
+To use the gateway locally, you need a copy of the Dappnet CA's private keys in order to sign. 
+
+If you've already installed Dappnet, these have been installed and generated for you. You can copy them locally using `cp -R /Applications/Dappnet.app/Contents/Resources/app.asar.unpacked/node_modules/@dappnet/local-gateway/dappnet-ca/data dappnet-ca/data`.
+
+If you would like to generate new keys, simply `cd dappnet-ca/` and run `./create-ca.sh`.
+
+Then you can run the server:
+
 ```sh
 npm i
 npm run start

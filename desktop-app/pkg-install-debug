@@ -1,0 +1,82 @@
+2023-03-10 12:42:53+11 Mac-mini installd[1942]: PackageKit: Running idle tasks
+2023-03-10 12:42:53+11 Mac-mini installd[1942]: PackageKit: Done with sandbox removals
+2023-03-10 12:42:53+11 Mac-mini Installer[68047]: install:didFailWithError:Error Domain=PKInstallErrorDomain Code=112 "An error occurred while running scripts from the package “Dappnet-1.6.0-arm64.pkg”." UserInfo={NSFilePath=./postinstall, NSURL=file:///Users/liamz/Documents/Projects/dappnet/desktop-app/dist/Dappnet-1.6.0-arm64.pkg#eth.dappnet.pkg, PKInstallPackageIdentifier=eth.dappnet, NSLocalizedDescription=An error occurred while running scripts from the package “Dappnet-1.6.0-arm64.pkg”.}
+2023-03-10 12:42:53+11 Mac-mini installd[1942]: PackageKit: Removing client PKInstallDaemonClient pid=68047, uid=501 (/System/Library/CoreServices/Installer.app/Contents/MacOS/Installer)
+2023-03-10 12:42:53+11 Mac-mini Installer[68047]: Install failed: The Installer encountered an error that caused the installation to fail. Contact the software manufacturer for assistance.
+2023-03-10 12:42:53+11 Mac-mini Installer[68047]: IFDInstallController 3997700 state = 8
+2023-03-10 12:42:53+11 Mac-mini Installer[68047]: Displaying 'Install Failed' UI.
+2023-03-10 12:42:53+11 Mac-mini Installer[68047]: 'Install Failed' UI displayed message:'The Installer encountered an error that caused the installation to fail. Contact the software manufacturer for assistance.'.
+2023-03-10 12:42:54+11 Mac-mini Installer[68047]: Package Removal: Package is not in downloads directory. Not offering removal.
+2023-03-10 12:42:54+11 Mac-mini Installer[68047]: Package Removal: Package cannot be removed.
+2023-03-10 12:43:16+11 Mac-mini installer[68108]: Product archive /Users/liamz/Documents/Projects/dappnet/desktop-app/./dist/Dappnet-1.6.0-arm64.pkg trustLevel=350
+2023-03-10 12:43:16+11 Mac-mini installer[68108]: External component packages (1) trustLevel=350
+2023-03-10 12:43:16+11 Mac-mini installer[68108]: -[IFDInstallController(Private) _buildInstallPlanReturningError:]: location = file://localhost
+2023-03-10 12:43:16+11 Mac-mini installer[68108]: -[IFDInstallController(Private) _buildInstallPlanReturningError:]: file://localhost/Users/liamz/Documents/Projects/dappnet/desktop-app/./dist/Dappnet-1.6.0-arm64.pkg#eth.dappnet.pkg
+2023-03-10 12:43:16+11 Mac-mini installer[68108]: Set authorization level to root for session
+2023-03-10 12:43:16+11 Mac-mini installer[68108]: Authorization is being checked, waiting until authorization arrives.
+2023-03-10 12:43:16+11 Mac-mini installer[68108]: Administrator authorization granted.
+2023-03-10 12:43:16+11 Mac-mini installer[68108]: Packages have been authorized for installation.
+2023-03-10 12:43:16+11 Mac-mini installer[68108]: Will use PK session
+2023-03-10 12:43:16+11 Mac-mini installer[68108]: Using authorization level of root for IFPKInstallElement
+2023-03-10 12:43:16+11 Mac-mini installer[68108]: Starting installation:
+2023-03-10 12:43:16+11 Mac-mini installer[68108]: Configuring volume "Macintosh HD"
+2023-03-10 12:43:16+11 Mac-mini installer[68108]: Preparing disk for local booted install.
+2023-03-10 12:43:16+11 Mac-mini installer[68108]: Free space on "Macintosh HD": 21.41 GB (21406646272 bytes).
+2023-03-10 12:43:16+11 Mac-mini installer[68108]: Create temporary directory "/var/folders/zz/zyxvpxvq6csfxvn_n0000000000000/T//Install.68108nggNzR"
+2023-03-10 12:43:16+11 Mac-mini installer[68108]: IFPKInstallElement (1 packages)
+2023-03-10 12:43:16+11 Mac-mini installer[68108]: Current Path: /usr/sbin/installer
+2023-03-10 12:43:16+11 Mac-mini installer[68108]: Current Path: /usr/bin/sudo
+2023-03-10 12:43:16+11 Mac-mini installd[1942]: PackageKit: Adding client PKInstallDaemonClient pid=68108, uid=0 (/usr/sbin/installer)
+2023-03-10 12:43:16+11 Mac-mini installer[68108]: PackageKit: Enqueuing install with framework-specified quality of service (utility)
+2023-03-10 12:43:16+11 Mac-mini installd[1942]: PackageKit: Set reponsibility for install to 12425
+2023-03-10 12:43:16+11 Mac-mini installd[1942]: PackageKit: ----- Begin install -----
+2023-03-10 12:43:16+11 Mac-mini installd[1942]: PackageKit: request=PKInstallRequest <1 packages, destination=/>
+2023-03-10 12:43:16+11 Mac-mini installd[1942]: PackageKit: packages=(
+	    "PKLeopardPackage <id=eth.dappnet, version=1.6.0, url=file:///Users/liamz/Documents/Projects/dappnet/desktop-app/dist/Dappnet-1.6.0-arm64.pkg#eth.dappnet.pkg>"
+	)
+2023-03-10 12:43:16+11 Mac-mini installd[1942]: PackageKit: Extracting file:///Users/liamz/Documents/Projects/dappnet/desktop-app/dist/Dappnet-1.6.0-arm64.pkg#eth.dappnet.pkg (destination=/Library/InstallerSandboxes/.PKInstallSandboxManager/60E6BAF2-60D5-4704-926B-9705F132D72E.activeSandbox/Root/Applications, uid=0)
+2023-03-10 12:43:18+11 Mac-mini installd[1942]: PackageKit: prevent user idle system sleep
+2023-03-10 12:43:18+11 Mac-mini installd[1942]: PackageKit: suspending backupd
+2023-03-10 12:43:18+11 Mac-mini installd[1942]: PackageKit: Using trashcan path /var/folders/zz/zyxvpxvq6csfxvn_n0000000000000/T/PKInstallSandboxTrash/60E6BAF2-60D5-4704-926B-9705F132D72E.sandboxTrash for sandbox /Library/InstallerSandboxes/.PKInstallSandboxManager/60E6BAF2-60D5-4704-926B-9705F132D72E.activeSandbox
+2023-03-10 12:43:18+11 Mac-mini install_monitor[68116]: Temporarily excluding: /Applications, /Library, /System, /bin, /private, /sbin, /usr
+2023-03-10 12:43:19+11 Mac-mini installd[1942]: PackageKit: Shoving /Library/InstallerSandboxes/.PKInstallSandboxManager/60E6BAF2-60D5-4704-926B-9705F132D72E.activeSandbox/Root (1 items) to /
+2023-03-10 12:43:19+11 Mac-mini installd[1942]: PackageKit (package_script_service): Preparing to execute script "./postinstall" in /private/tmp/PKInstallSandbox.CPeipp/Scripts/eth.dappnet.LB4gEO
+2023-03-10 12:43:19+11 Mac-mini package_script_service[27737]: PackageKit: Executing script "postinstall" in /tmp/PKInstallSandbox.CPeipp/Scripts/eth.dappnet.LB4gEO
+2023-03-10 12:43:19+11 Mac-mini package_script_service[27737]: Set responsibility to pid: 12425, responsible_path: /Applications/iTerm.app/Contents/MacOS/iTerm2
+2023-03-10 12:43:19+11 Mac-mini package_script_service[27737]: ./postinstall: + echo /tmp/PKInstallSandbox.CPeipp/Scripts/eth.dappnet.LB4gEO/postinstall
+2023-03-10 12:43:19+11 Mac-mini package_script_service[27737]: ./postinstall: /tmp/PKInstallSandbox.CPeipp/Scripts/eth.dappnet.LB4gEO/postinstall
+2023-03-10 12:43:19+11 Mac-mini package_script_service[27737]: ./postinstall: + ls /tmp/PKInstallSandbox.CPeipp/Scripts/eth.dappnet.LB4gEO/postinstall
+2023-03-10 12:43:19+11 Mac-mini package_script_service[27737]: ./postinstall: /tmp/PKInstallSandbox.CPeipp/Scripts/eth.dappnet.LB4gEO/postinstall
+2023-03-10 12:43:19+11 Mac-mini package_script_service[27737]: ./postinstall: + echo /Users/liamz/Documents/Projects/dappnet/desktop-app/dist/Dappnet-1.6.0-arm64.pkg
+2023-03-10 12:43:19+11 Mac-mini package_script_service[27737]: ./postinstall: /Users/liamz/Documents/Projects/dappnet/desktop-app/dist/Dappnet-1.6.0-arm64.pkg
+2023-03-10 12:43:19+11 Mac-mini package_script_service[27737]: ./postinstall: + echo /Applications
+2023-03-10 12:43:19+11 Mac-mini package_script_service[27737]: ./postinstall: /Applications
+2023-03-10 12:43:19+11 Mac-mini package_script_service[27737]: ./postinstall: + ls /Applications/Dappnet.app/
+2023-03-10 12:43:19+11 Mac-mini package_script_service[27737]: ./postinstall: Contents
+2023-03-10 12:43:19+11 Mac-mini package_script_service[27737]: ./postinstall: + echo /
+2023-03-10 12:43:19+11 Mac-mini package_script_service[27737]: ./postinstall: /
+2023-03-10 12:43:19+11 Mac-mini package_script_service[27737]: ./postinstall: + echo Creating CA...
+2023-03-10 12:43:19+11 Mac-mini package_script_service[27737]: ./postinstall: Creating CA...
+2023-03-10 12:43:19+11 Mac-mini package_script_service[27737]: ./postinstall: + DAPPNET_APP_PATH=/Applications/Dappnet.app
+2023-03-10 12:43:19+11 Mac-mini package_script_service[27737]: ./postinstall: + cd /Applications/Dappnet.app/Contents/Resources/app.asar.unpacked/node_modules/@dappnet/local-gateway/dappnet-ca/
+2023-03-10 12:43:19+11 Mac-mini package_script_service[27737]: ./postinstall: + ./create-ca.sh
+2023-03-10 12:43:20+11 Mac-mini package_script_service[27737]: ./postinstall: + '[' -f ca.crt ']'
+2023-03-10 12:43:20+11 Mac-mini package_script_service[27737]: ./postinstall: + '[' -f ca.key ']'
+2023-03-10 12:43:20+11 Mac-mini package_script_service[27737]: ./postinstall: + mkdir data/
+2023-03-10 12:43:20+11 Mac-mini package_script_service[27737]: ./postinstall: mkdir: data/: File exists
+2023-03-10 12:43:20+11 Mac-mini package_script_service[27737]: Responsibility set back to self.
+2023-03-10 12:43:20+11 Mac-mini install_monitor[68116]: Re-included: /Applications, /Library, /System, /bin, /private, /sbin, /usr
+2023-03-10 12:43:21+11 Mac-mini installd[1942]: PackageKit: releasing backupd
+2023-03-10 12:43:21+11 Mac-mini installd[1942]: PackageKit: allow user idle system sleep
+2023-03-10 12:43:21+11 Mac-mini installd[1942]: PackageKit: Install Failed: Error Domain=PKInstallErrorDomain Code=112 "An error occurred while running scripts from the package “Dappnet-1.6.0-arm64.pkg”." UserInfo={NSFilePath=./postinstall, NSURL=file:///Users/liamz/Documents/Projects/dappnet/desktop-app/dist/Dappnet-1.6.0-arm64.pkg#eth.dappnet.pkg, PKInstallPackageIdentifier=eth.dappnet, NSLocalizedDescription=An error occurred while running scripts from the package “Dappnet-1.6.0-arm64.pkg”.} {
+	    NSFilePath = "./postinstall";
+	    NSLocalizedDescription = "An error occurred while running scripts from the package \U201cDappnet-1.6.0-arm64.pkg\U201d.";
+	    NSURL = "file:///Users/liamz/Documents/Projects/dappnet/desktop-app/dist/Dappnet-1.6.0-arm64.pkg#eth.dappnet.pkg";
+	    PKInstallPackageIdentifier = "eth.dappnet";
+	}
+2023-03-10 12:43:21+11 Mac-mini installd[1942]: PackageKit: Cleared responsibility for install from 68108.
+2023-03-10 12:43:21+11 Mac-mini installd[1942]: PackageKit: Running idle tasks
+2023-03-10 12:43:21+11 Mac-mini installer[68108]: install:didFailWithError:Error Domain=PKInstallErrorDomain Code=112 "An error occurred while running scripts from the package “Dappnet-1.6.0-arm64.pkg”." UserInfo={NSFilePath=./postinstall, NSURL=file:///Users/liamz/Documents/Projects/dappnet/desktop-app/dist/Dappnet-1.6.0-arm64.pkg#eth.dappnet.pkg, PKInstallPackageIdentifier=eth.dappnet, NSLocalizedDescription=An error occurred while running scripts from the package “Dappnet-1.6.0-arm64.pkg”.}
+2023-03-10 12:43:21+11 Mac-mini installd[1942]: PackageKit: Removing client PKInstallDaemonClient pid=68108, uid=0 (/usr/sbin/installer)
+2023-03-10 12:43:21+11 Mac-mini installd[1942]: PackageKit: Done with sandbox removals
+2023-03-10 12:43:21+11 Mac-mini installer[68108]: Install failed: The Installer encountered an error that caused the installation to fail. Contact the software manufacturer for assistance.

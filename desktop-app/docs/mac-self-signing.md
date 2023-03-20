@@ -14,3 +14,11 @@ sudo spctl --status
 # re-enable.
 sudo spctl --master-enable
 ```
+
+## @electron/signing
+
+```sh
+# export DEBUG=electron-osx-sign*
+export DEBUG=*
+npx electron-builder
+```

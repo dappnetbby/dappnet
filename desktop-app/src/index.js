@@ -6,21 +6,24 @@ import {spawn, spawnSync} from 'node:child_process';
 import {app, BrowserWindow, ipcMain, MessageChannelMain, shell} from 'electron';
 import electronIsDev from 'electron-is-dev';
 import serve from 'electron-serve';
-import * as IPFSHttpClient from 'ipfs-http-client';
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import  net from 'node:net';
 import * as _ from 'lodash'
-import { ipfsConfigForFastTeens } from './ipfs';
+import { ipfsConfigForFastTeens } from './ipfs-configs/ipfs';
 import * as yargs from 'yargs'
 import { dialog, autoUpdater, session } from 'electron';
 import { app } from 'electron'
+import { execPath } from 'node:process';
+import chalk from 'chalk'
+import { fork } from 'child_process'
+
+
 const {
     Worker, isMainThread, parentPort, workerData,
 } = require('node:worker_threads');
-const { dialog } = require('electron')
-const featureFlags = require("./feature-flags")
+
+const { featureFlags, env } = require("./config")
 
 
 
@@ -29,8 +32,8 @@ const featureFlags = require("./feature-flags")
 // 
 
 function printBanner() {
-    console.log(`dappnet v${app.getVersion()}`)
-    console.log(`Do what you think is based work.`)
+    console.log(chalk.blueBright(`Dappnet v${app.getVersion()}`))
+    console.log(chalk.blue(`Do what you think is great work.`))
     console.log(``)
     console.log(``)
 }
@@ -80,9 +83,12 @@ function configureAutomaticUpdates() {
         // autoUpdater.checkForUpdates()
     }
 
-    const log = console.log
+    const log = function() {
+        console.log(chalk.yellow(`[updater]`), chalk.gray(...arguments))
+    }
+
     autoUpdater.on('error', function () {
-        console.log(arguments)
+        log(chalk.red(arguments))
     })
 
     autoUpdater.on('error', err => {
@@ -128,7 +134,8 @@ function configureAutomaticUpdates() {
 // 
 
 function parseArguments() {
-    console.log(process.argv);
+    console.log(chalk.gray(process.argv.join(', ')))
+    console.log()
 
     // require('yargs')
     //     .scriptName("dappnet")
@@ -201,37 +208,61 @@ function setupExtension() {
     }
 }
 
-
-function checkPortInUse(port) {
-    return new Promise((resolve, reject) => {
-        const server = net.createServer()
-
-        server.once('error', (err) => {
-            if (err.code === 'EADDRINUSE') {
-                resolve(true)
-            } else {
-                reject(err)
-            }
-        })
-
-        server.once('listening', () => {
-            server.close()
-            resolve(false)
-        })
-
-        server.listen(port)
-    })
-}
+let processes = []
 
 function startGateway() {
-    if (process.env.DEV_GATEWAY) {
+    const appPath = app.getAppPath()
+    const appDataPath = app.getPath('appData')
+
+
+    const program3 = fork(path.join(__dirname, 'services/ipfs.js'), ['args'], {
+        stdio: 'pipe',
+        env: {
+            APP_PATH: appPath,
+            APP_DATA_PATH: appDataPath,
+            DEV_IPFS: env.DEV_IPFS,
+            FORCE_COLOR: true
+        }
+    });
+    processes.push(program3)
+
+    program3.stdout.pipe(process.stdout);
+    program3.stderr.pipe(process.stderr);
+
+
+
+    const program2 = fork(path.join(__dirname, 'services/proxy.js'), ['args'], {
+        stdio: 'pipe',
+        env: {
+            APP_PATH: appPath,
+            APP_DATA_PATH: appDataPath,
+            FORCE_COLOR: true
+        }
+    });
+    processes.push(program2)
+
+    program2.stdout.pipe(process.stdout);
+    program2.stderr.pipe(process.stderr);
+
+
+    if (env.DEV_GATEWAY) {
         console.debug('[dev] using local gateway')
         return
     }
 
-    const appPath = app.getAppPath()
-    const appDataPath = app.getPath('appData')
-    require('./gateway/worker')({ appPath, appDataPath })
+    const program1 = fork(path.join(__dirname, 'services/gateway.js'), ['args'], {
+        stdio: 'pipe',
+        env: {
+            APP_PATH: appPath,
+            APP_DATA_PATH: appDataPath,
+            FORCE_COLOR: true
+        }
+    });
+    processes.push(program1)
+
+    program1.stdout.pipe(process.stdout);
+    program1.stderr.pipe(process.stderr);
+
 }
 
 function startWallet() {
@@ -371,7 +402,23 @@ async function createWindow() {
     } else {
         const openInSystemBrowser = (url) => {
             console.log(url);
-            shell.openExternal(url);
+
+            // Open in the default browser.
+            if (env.OPEN_IN_DEFAULT_BROWSER) {
+                shell.openExternal(url);
+                return
+            }
+
+            // Open in Chrome.
+            // By using -a, the Chrome logo does not pop up in the dock.
+            const application = 'open'
+            const args = ['-a', "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", url]
+            const options = {
+                detached: true,
+                stdio: 'ignore'
+            }
+            const child = spawn(application, args, options)
+            child.unref()
         }
         mainWindow.webContents.setWindowOpenHandler(({ url }) => {
             openInSystemBrowser(url)
@@ -384,7 +431,7 @@ async function createWindow() {
     }
 
 
-    if (process.env.DEV_UI) {
+    if (env.DEV_UI) {
         console.debug('[dev] using local dappnet UI')
         await mainWindow.loadURL('http://localhost:3000');
         // await mainWindow.loadURL('app://-');
@@ -407,28 +454,13 @@ parseArguments()
 configureAutomaticUpdates()
 configureApp()
 serveUI()
+startGateway()
 
 if (featureFlags.EMBEDDED_WALLET) {
     startWallet()
 }
 
-app.whenReady().then(async () => {
-    // Check if Dappnet is already open, by checking the local-gateway port.
-    const dappnetAlreadyOpen = await checkPortInUse(10424)
-    if(dappnetAlreadyOpen) {
-        dialog.showMessageBoxSync(
-            null, 
-            {
-                message: "Dappnet client seems to be already running. Please close the other instance before starting a new one.",
-                type: 'info',
-            }
-        )
-        process.exit(1)
-        return
-    }
-
-
-    startGateway()
+app.whenReady().then(() => {
     // setupExtension()
     createWindow()
 
@@ -444,3 +476,10 @@ app.on('window-all-closed', () => {
         app.quit();
     }
 });
+
+// Add a handler for when the process is exiting.
+process.on('exit', function () {
+    processes.forEach(function (proc) {
+        proc.kill();
+    });
+})
