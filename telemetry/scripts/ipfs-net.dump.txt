@@ -1,0 +1,2 @@
+time,,interface,state,bytes_in,bytes_out,rx_dupe,rx_ooo,re-tx,rtt_avg,rcvsize,tx_win,tc_class,tc_mgt,cc_algo,P,C,R,W,arch,
+15:22:00.995873,ipfs.56304,,,64958432,40279962,426288,159933,116503,,,,,,,,,,,,
