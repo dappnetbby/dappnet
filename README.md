@@ -32,6 +32,10 @@ Some useful tools for hackers:
  - [ipfs-tools](./ipfs-tools/) - helper for deploying websites to remote IPFS nodes, updating the IPNS name automatically.
  - [local-gateway/utils/ens.js](./local-gateway/utils/ens.js) - helper for ENS resolution (shows DNSLink, IPFS, IPNS).
 
+## License
+
+Dappnet is licensed under a Business Source License, similar to our friends at Uniswap and Aave. See [LICENSE](./LICENSE).
+
 ## Acknowledgements.
 
 In order of usage:
