@@ -19,12 +19,12 @@ import chalk from 'chalk'
 import { fork } from 'child_process'
 
 
-const {
+import {
     Worker, isMainThread, parentPort, workerData,
-} = require('node:worker_threads');
+} from "node:worker_threads"
 
 const { featureFlags, env } = require("./config")
-
+import telemetry from './telemetry'
 
 
 // 
@@ -113,6 +113,7 @@ function configureAutomaticUpdates() {
     // })
 
     autoUpdater.on('update-downloaded', (event, releaseNotes, releaseName) => {
+        telemetry.log('desktop-app', 'update-downloaded', { time: Date.now(), releaseName })
         const dialogOpts = {
             type: 'info',
             buttons: ['Restart', 'Later'],
@@ -199,7 +200,8 @@ function serveUI() {
 }
 
 function setupExtension() {
-    // Load extension
+    // Load extension into the Electron context.
+    // NOTE: doesn't work.
     try {
         // const dappnetExtension = await session.defaultSession.loadExtension('/Users/liamz/Documents/Projects/dappnet/extension/build/chrome')
         // const dappnetExtension = await session.defaultSession.loadExtension('/Users/liamz/Documents/Projects/dappnet/preload/dist')
@@ -213,7 +215,6 @@ let processes = []
 function startGateway() {
     const appPath = app.getAppPath()
     const appDataPath = app.getPath('appData')
-
 
     const program3 = fork(path.join(__dirname, 'services/ipfs.js'), ['args'], {
         stdio: 'pipe',
@@ -326,6 +327,15 @@ async function createWindow() {
         // movable: true,
     });
 
+    // Detect last exit and send this event to the server.
+    const lastExit = telemetry.store.get("lastExit")
+    if (lastExit) {
+        telemetry.log('desktop-app', 'close', { time: lastExit })
+        telemetry.store.delete("lastExit")
+    }
+    telemetry.log('desktop-app', 'open', { time: Date.now() })
+
+
     if(featureFlags.EMBEDDED_WALLET) {
         fixInjectedEthereumObject(mainWindow)
     }
@@ -378,6 +388,8 @@ async function createWindow() {
     if(featureFlags.EMBEDDED_BROWSER) {
         // New windows should look different to the main Dappnet window.
         mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+            telemetry.log('desktop-app', 'launch-dapp', { time: Date.now(), url })
+            
             return {
                 action: 'allow',
                 outlivesOpener: true,
@@ -425,6 +437,8 @@ async function createWindow() {
         })
         // Open URL's (.eth apps) in the system's web browser.
         mainWindow.webContents.on('will-navigate', function (event, url) {
+            telemetry.log('desktop-app', 'launch-dapp', { time: Date.now(), url })
+
             event.preventDefault();
             openInSystemBrowser(url)
         });
@@ -451,6 +465,7 @@ async function createWindow() {
 
 printBanner()
 parseArguments()
+telemetry.configure()
 configureAutomaticUpdates()
 configureApp()
 serveUI()
@@ -476,6 +491,10 @@ app.on('window-all-closed', () => {
         app.quit();
     }
 });
+
+app.on('will-quit', () => {
+    telemetry.store.set("lastExit", Date.now())
+})
 
 // Add a handler for when the process is exiting.
 process.on('exit', function () {
