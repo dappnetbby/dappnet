@@ -13,6 +13,10 @@ const streamPipeline = promisify(pipeline);
 const { CID } = require('multiformats/cid')
 const chalk = require('chalk');
 
+const Socks5Proxy = require('./socks5-proxy/proxy')
+const telemetry = require('./telemetry')
+
+const { PerfTimer } = require('./utils')
 
 const {
     testENS,
@@ -28,9 +32,22 @@ const {
     generateCertificateOpenSSL
 } = require('./certificates');
 
-const PROXY_PORT_HTTP = 10422
-const PROXY_PORT_HTTPS = 10424
-const IPFS_NODE_API_URL = `http://127.0.0.1:5001`
+const {
+    ENSNoContentError,
+    UnsupportedContentTypeError,
+    IPFSTimeoutError,
+
+    noContentForENSNamePage,
+    unsupportedContentPage,
+    defaultErrorPage,
+} = require('./errors')
+
+const {
+    PROXY_PORT_HTTP,
+    PROXY_PORT_HTTPS,
+    IPFS_NODE_API_URL,
+    IPFS_HTTP_GATEWAY
+} = require('./config')
 
 // Logging.
 class Logger {
@@ -86,12 +103,6 @@ const sniCallback = (serverName, callback) => {
     }
 }
 
-// 
-// Errors.
-// 
-
-class ENSNoContentError extends Error { }
-class UnsupportedContentTypeError extends Error { }
 
 // 
 // Middleware for resolving/loading IPFS/IPNS content.
@@ -104,7 +115,7 @@ async function getIpfs(req, res, next) {
     res.setHeader('X-Dappnet-IPFS', `${cid}`);
 
     try {
-        await proxyToGateway(req, ipfsPath, res)
+        await resolveIpfs(req, ipfsPath, res)
         return
     } catch (err) {
         return next(err)
@@ -123,9 +134,9 @@ async function getIpns(req, res, next) {
     // Only left it here because I wanted to support Uniswap.
     if (dnsLinkName) {
         // Resolve the DNS link.
-        console.time(`resolveDNSLink(${dnsLinkName})`)
+        const timer_dnslink = new PerfTimer(`resolveDNSLink(${dnsLinkName})`)
         cid = await resolveDNSLink(dnsLinkName)
-        console.timeEnd(`resolveDNSLink(${dnsLinkName})`)
+        timer_dnslink.end(`resolveDNSLink(${dnsLinkName})`)
 
         // Construct the IPFS path.
         ipfsPath = `/ipfs/${cid}${req.path || '/'}`
@@ -160,33 +171,22 @@ async function getIpns(req, res, next) {
 
     // 2) Proxy the request for a CID to the gateway.
     try {
-        await proxyToGateway(req, ipfsPath, res)
+        await resolveIpfs(req, ipfsPath, res)
         return
     } catch (err) {
         return next(err)
     }
 }
 
-const getIpfsGateway = () => {
-    // NOTE: If the host below is specified as localhost, the ipfs-node software will
-    // perform a 301 redirect to baf_ENCODED_HASH.ipfs.localhost. We don't want this,
-    // since node-fetch can't handle it.
-    return 'http://127.0.0.1:8080'
-}
 
-const gatewayAgent = new http.Agent({
-    keepAlive: true, 
-    maxSockets: 1000,
-});
-
-http.globalAgent = gatewayAgent
-
-const proxyToGateway = async (req, ipfsPath, res) => {
-    const gatewayUrl = `${getIpfsGateway()}${ipfsPath}`
+const resolveIpfs = async (req, ipfsPath, res) => {
+    const gatewayUrl = `${IPFS_HTTP_GATEWAY}${ipfsPath}`
 
     // Get the ENS domain.
     const domain = req.hostname
-    log.info(chalk.yellow('proxyToGateway'), req.hostname, gatewayUrl)
+    log.info(chalk.yellow('resolveIpfs'), domain, gatewayUrl)
+
+    const timer_ipfs = new PerfTimer(`resolveIpfs(${gatewayUrl})`)
 
     http.get(gatewayUrl, async (gatewayRes) => {
         // Transfer the headers from the response.
@@ -194,12 +194,40 @@ const proxyToGateway = async (req, ipfsPath, res) => {
 
         // Stream the response.
         gatewayRes.pipe(res)
+        
+        // Detect when the response is complete.
+        gatewayRes.on('end', () => {
+            timer_ipfs.end()
+
+            // Check for errors.
+            // if (gatewayRes.statusCode !== 200) {
+            //     // throw new Error(`IPFS gateway returned status code ${gatewayRes.statusCode}`)
+            //     return
+            // }
+
+            // telemetry.log('local-gateway', 'resolve-ipfs', {
+            //     ensName: domain,
+            //     ipnsNode: IPFS_HTTP_GATEWAY,
+            //     path: ipfsPath,
+            //     timeToResolve: timer_ipfs.elapsed,
+            // })
+        })
     })
 }
 
-function start({ dappnetCADataPath }) {
+
+
+const gatewayAgent = new http.Agent({
+    keepAlive: true,
+    maxSockets: 1000,
+});
+
+http.globalAgent = gatewayAgent
+
+function start({ dappnetCADataPath, telemetryConfig }) {
     const app = express();
     
+    telemetry.configure(telemetryConfig)
     loadCertificateAuthorityData(dappnetCADataPath)
 
     // Preload DNS endpoints.
@@ -214,9 +242,8 @@ function start({ dappnetCADataPath }) {
     // Host: uniswap.eth
     // ```
     app.get('/*', async (req, res, next) => {
-        // TODO bugged
         const fullPath = `${req.hostname}${req.path || '/'}`
-        console.time(fullPath)
+        const timer_gatewayResolve = new PerfTimer(`gatewayResolve("${fullPath}")`)
         log.info(chalk.yellow('GET'), fullPath)
 
         res.setHeader('X-Dappnet-Gateway', require('../package.json').version);
@@ -232,6 +259,8 @@ function start({ dappnetCADataPath }) {
         }
 
         if(host == 'ipfs.dappnet') {
+            // Utility to resolve IPFS: ipfs.dappnet/?hash=Qm...
+
             // Match Qm up until the first /
             console.log(req.params)
             const hash = req.query.hash
@@ -262,13 +291,14 @@ function start({ dappnetCADataPath }) {
             }
 
         } else if(host.endsWith('.ipfs.dappnet')) {
+            // Subdomain: QmHASH.ipfs.dappnet
             const cid = host.split('.')[0]
             req.ensData = { hash: cid, codec: "ipfs-ns" }
 
             const ipfsPath = `/ipfs/${cid}${req.path || '/'}`
 
             try {
-                await proxyToGateway(req, ipfsPath, res)
+                await resolveIpfs(req, ipfsPath, res)
                 return
             } catch (err) {
                 return next(err)
@@ -279,9 +309,7 @@ function start({ dappnetCADataPath }) {
         const ensName = host
         req.ensName = ensName
         try {
-            console.time(req.path)
             req.ensData = await resolveENS(ensName);
-            console.timeEnd(req.path)
         } catch(err) {
             return next(err)
         }
@@ -308,7 +336,7 @@ function start({ dappnetCADataPath }) {
         } catch(err) {
             next(err)
         } finally {
-            console.timeEnd(fullPath)
+            timer_gatewayResolve.end(fullPath)
         }
     });
     
@@ -344,16 +372,22 @@ function start({ dappnetCADataPath }) {
         SNICallback: sniCallback,
     }, app);
 
+    // HTTPS server.
     httpsServer.listen(PROXY_PORT_HTTPS, async () => {
         log.info(`Gateway proxy server listening on https://localhost:${PROXY_PORT_HTTPS}`)
     })
 
-    // HTTP.
+    // HTTP server.
     const httpServer = http.createServer(app);
     httpServer.listen(PROXY_PORT_HTTP, () => {
         log.info(`Gateway proxy server listening on http://localhost:${PROXY_PORT_HTTP}`)
     })
 
+    // Local SOCKS5 proxy.
+    // Socks5Proxy.start()
+
+    // API server.
+    // NOTE: Experimental. This is used to display metadata in the extension.
     const apiServer = express();
     apiServer.get('/v0/url-info', async (req, res) => {
         const url = req.params['url']
@@ -380,95 +414,6 @@ function preload(ensName) {
     })
 }
 
-// 
-// Error pages.
-// 
-
-
-const pageStyles = `
-html {
-  box-sizing: border-box;
-  font-size: 16px;
-}
-
-body {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-}
-
-#error {
-    text-align: left;
-    width: 800px;
-    margin: 0 auto;
-    padding-top: 2rem;
-}
-
-#error h2 {
-    margin-bottom: 0;
-}
-
-p {
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
-}
-`
-const noContentForENSNamePage = ({ req, err, ensName }) => {
-    return `
-<!doctype html>
-<html>
-    <head>
-        <title>${ensName}</title>
-        <style>${pageStyles}</style>
-    </head>
-    <body>
-        <div id="error">
-            <small>Dappnet</small>
-            <h2>There was no content found for ${ensName}</h2>
-            <p>The content hash was empty.</p>
-            <p>If you're the owner of this name, you can <a href="https://app.ens.domains/name/${ensName}">configure it here</a> on ENS.
-        </div>
-    </body>
-</html>
-`
-}
-
-const unsupportedContentPage = ({ req, err, ensName }) => {
-    return `
-<!doctype html>
-<html>
-    <head>
-        <title>${ensName}</title>
-        <style>${pageStyles}</style>
-    </head>
-    <body>
-        <div id="error">
-            <small>Dappnet</small>
-            <h2>Couldn't load content for ${ensName}</h2>
-            <p>This content type is not yet supported by Dappnet or couldn't be parsed.</p>
-            <pre>${`${err.toString()}\nENS data:\n${JSON.stringify(req.ensData, null, 2)}\nIPNS data:\n${JSON.stringify(req.ipnsData, null, 2)}`}</pre>
-        </div>
-    </body>
-</html>
-`
-}
-
-const defaultErrorPage = ({ req, err, ensName }) => {
-    return `
-<!doctype html>
-<html>
-    <head>
-        <title>${ensName}</title>
-        <style>${pageStyles}</style>
-    </head>
-    <body>
-        <div id="error">
-            <small>Dappnet</small>
-            <h2>There was an unexpected error while loading ${ensName}</h2>
-            <pre>${`${err.toString()}\nENS data:\n${JSON.stringify(req.ensData, null, 2)}\nIPNS data:\n${JSON.stringify(req.ipnsData, null, 2)}`}</pre>
-        </div>
-    </body>
-</html>
-`
-}
 
 module.exports = {
     start

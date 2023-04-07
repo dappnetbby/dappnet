@@ -2,8 +2,9 @@ import * as LocalGateway from '@dappnet/local-gateway';
 import * as sourceMap from 'source-map-support';
 sourceMap.install();
 import path from 'node:path'
+import { env } from '../config';
 
-async function main({ appPath, appDataPath }) {
+async function main({ appPath, appDataPath, data }) {
     // Find the path to the certificate info.
     // const appPathUnpacked = appPath.replace('app.asar', 'app.asar.unpacked')
     // const dappnetCADataPath = path.join(appPathUnpacked, `/node_modules/@dappnet/local-gateway/dappnet-ca/data/`)
@@ -18,13 +19,21 @@ async function main({ appPath, appDataPath }) {
     const dappnetCADataPath = `/Applications/Dappnet.app/data/`
 
     // Launch the .eth -> IPFS gateway.
-    const ensGateway = LocalGateway.start({ dappnetCADataPath });
+    const {
+        telemetry
+    } = data
+
+    const ensGateway = LocalGateway.start({
+        dappnetCADataPath,
+        telemetryConfig: telemetry,
+    });
 }
 
-const { APP_PATH, APP_DATA_PATH } = process.env
+const { APP_PATH, APP_DATA_PATH, DATA } = process.env
 const config = {
     appPath: APP_PATH,
-    appDataPath: APP_DATA_PATH
+    appDataPath: APP_DATA_PATH,
+    data: JSON.parse(DATA)
 }
 
 main(config).catch(err => {

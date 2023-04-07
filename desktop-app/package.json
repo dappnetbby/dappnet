@@ -31,7 +31,6 @@
   },
   "dependencies": {
     "@dappnet/local-gateway": "file:../local-gateway",
-    "@dappnet/local-socks5-proxy": "file:../local-socks5-proxy",
     "@ethersproject/experimental": "^5.7.0",
     "chalk": "^4.1.2",
     "electron-is-dev": "^2.0.0",

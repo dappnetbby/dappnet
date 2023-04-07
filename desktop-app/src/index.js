@@ -25,6 +25,7 @@ import {
 
 const { featureFlags, env } = require("./config")
 import telemetry from './telemetry'
+import { ServiceLoggerStream } from './utils';
 
 
 // 
@@ -256,7 +257,13 @@ function startGateway() {
         env: {
             APP_PATH: appPath,
             APP_DATA_PATH: appDataPath,
-            FORCE_COLOR: true
+            FORCE_COLOR: true,
+            DATA: JSON.stringify({
+                telemetry: {
+                    clientInfo: telemetry.clientInfo,
+                    TELEMETRY_ENABLED: env.TELEMETRY_ENABLED,
+                }
+            })
         }
     });
     processes.push(program1)

@@ -38,7 +38,7 @@ const log = function (...x: any) {
 }
 
 
-let clientInfo = {
+export let clientInfo = {
     clientId: "",
     os: node_os.platform(),
     osVersion: node_os.release(),
@@ -47,7 +47,7 @@ let clientInfo = {
 }
 // const userAgent = app.userAgentFallback
 
-export function configureTelemetry() {
+export function configure() {
     clientInfo.clientId = getClientId()
 
     // Log some basic info
@@ -93,7 +93,8 @@ export const telemetryLog = async (source: string, event: string, args: any) => 
 
 
 const telemetry = {
-    configure: configureTelemetry,
+    clientInfo,
+    configure,
     log: telemetryLog,
     store: store
 }
