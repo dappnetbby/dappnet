@@ -1,10 +1,8 @@
 import * as LocalGateway from '@dappnet/local-gateway';
-
 import { spawn, spawnSync } from 'node:child_process';
 import * as path from 'node:path';
 import * as sourceMap from 'source-map-support';
 sourceMap.install();
-
 
 import * as _ from 'lodash';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';

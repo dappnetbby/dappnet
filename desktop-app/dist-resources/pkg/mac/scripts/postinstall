@@ -29,6 +29,7 @@ echo $3
 
 DAPPNET_APP_PATH=$2/Dappnet.app
 DAPPNET_DATA_DIR=$DAPPNET_APP_PATH/data
+# DAPPNET_DATA_DIR="$HOME/Library/Application Support/Dappnet"
 
 # If the data dir doesn't already exist, create it.
 if [ ! -d "$DAPPNET_DATA_DIR" ]; then

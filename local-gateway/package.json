@@ -27,6 +27,7 @@
     "jsrsasign-util": "^1.0.5",
     "multiformats": "^9.9.0",
     "node-fetch": "^2.6.9",
+    "request": "^2.88.2",
     "shelljs": "^0.8.5"
   },
   "devDependencies": {

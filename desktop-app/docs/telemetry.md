@@ -16,7 +16,6 @@ An outline of the data we're collecting.
 ```sh
 # Rough format:
 # SOURCE       EVENT-NAME   ...ARGS
-
 update-server  pageview      path ip
 
 desktop-app    open          install-id time platform=macOS version

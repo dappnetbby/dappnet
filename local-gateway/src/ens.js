@@ -5,6 +5,16 @@ const { namehash } = require("@ethersproject/hash")
 const ethers = require('ethers')
 const bs58 = require('bs58')
 const fetch = require('node-fetch')
+// const request = require('request');
+const http = require('node:http');
+
+const telemetry = require('./telemetry')
+const { PerfTimer, now } = require('./utils')
+
+const {
+    IPFSTimeoutError,
+    IPNSTimeoutError
+} = require('./errors')
 
 // Provider setup.
 const provider = new ethers.providers.CloudflareProvider()
@@ -69,11 +79,9 @@ async function testENS() {
 
     // let resolver = ENSResolver.attach(resolverAddr)
     // let hash = await resolver.contenthash(namehash('uniswap.eth').substring(2))
-    console.log(hash, content, codec)
+    // console.log(hash, content, codec)
 }
 
-
-const now = () => (+new Date)
 class Cache {
     constructor(opts = {}) {
         this.cache = {}
@@ -111,15 +119,65 @@ const NAMESPACE_IPNS = 0xe5
 const CONTENT_TYPE_DAG_PB = 0x70
 const IDENTITY_FN = 0x00
 
+
+const {
+    performance,
+    PerformanceObserver,
+} = require('node:perf_hooks');
+
+
+
+
+// Promise memoization.
+// 
+let _promiseMutex = {}
+
+const resolveENS = async (name) => {
+    let key = `resolveENS-${name}`
+    if (_promiseMutex[key]) return _promiseMutex[key]
+    _promiseMutex[key] = _resolveENS(name)
+    return _promiseMutex[key]
+}
+
+const resolveIPNS = async (ipfsNodeApiUrl, ipnsPath) => {
+    let key = `resolveIPNS-${ipnsPath}`
+    if (_promiseMutex[key]) return _promiseMutex[key]
+    _promiseMutex[key] = _resolveIPNS(ipfsNodeApiUrl, ipnsPath)
+    return _promiseMutex[key]
+}
+
+
+
 // Resolves ENS domains to content hashes.
 // Does this optimistically - if the resolver is the default resolver, we can
 // resolve the content hash without making any additional calls.
-async function resolveENS(name) {
+async function _resolveENS(name) {
+    // 1) Fast-path: resolve to cache.
     let cached = ensCache.get(name)
-    if(cached) return cached
+    if(cached) {
+        // telemetry.log('local-gateway', 'resolve-ens', {
+        //     rpcNode: provider.connection.url,
+        //     ensName: name,
+        //     timeToResolve: 0,
+        // })
+        return cached
+    }
 
-    console.time(`ens.getResolver(${name})`)
-    console.time(`resolver.getContentHash(${name})`)
+    // 
+    // 2) Slow-path: resolve to ENS.
+    // 
+    // This involves two steps:
+    // 1. Resolve the ENS name to its ENS resolver.
+    // 2. Call the resolver to get the content hash.
+    // 
+    // Ordinarily, this would require two separate calls to the ENS registry.
+    // However, most ENS names use the default resolver.
+    // We use multicall here to make a single call to the ENS registry, which
+    // will optimistically resolve the content hash if the resolver is the
+    // default resolver.
+    // 
+    let timer_ens = new PerfTimer(`ens.getResolver(${name})`)
+    let timer_ens_resolver = new PerfTimer(`resolver.getContentHash(${name})`)
 
     const namehash = ethers.utils.namehash(name)
 
@@ -129,6 +187,7 @@ async function resolveENS(name) {
     ]
 
     const [_, results] = await Multicall.callStatic.aggregate(calls)
+
     const [defaultResolverContentHash$, resolverAddr$] = results
 
     // Now decode the return data.
@@ -139,20 +198,27 @@ async function resolveENS(name) {
     if(resolverAddr != DEFAULT_ENS_RESOLVER) {
         // Lookup content hash from custom resolver.
         const resolver = await provider.getResolver(name)
-        console.timeEnd(`ens.getResolver(${name})`)
+        timer_ens.end()
 
         if (!resolver) {
-            console.timeEnd(`resolver.getContentHash(${name})`)
+            timer_ens_resolver.end()
             throw new Error(`ENS name doesn't exist: ${name}`)
+        } else {
+            // let hash = await resolver.getContentHash()
+            contentHashHex = await resolver._fetchBytes("0xbc1c58d1");
+            timer_ens_resolver.end()
         }
-
-        // let hash = await resolver.getContentHash()
-        contentHashHex = await resolver._fetchBytes("0xbc1c58d1");
-        console.timeEnd(`resolver.getContentHash(${name})`)
+        
     } else {
-        console.timeEnd(`ens.getResolver(${name})`)
-        console.timeEnd(`resolver.getContentHash(${name})`)
+        timer_ens.end()
+        timer_ens_resolver.end()
     }
+    
+    telemetry.log('local-gateway', 'resolve-ens', {
+        rpcNode: provider.connection.url,
+        ensName: name,
+        timeToResolve: timer_ens.elapsed,
+    })
 
     if (contentHashHex == '0x') return {
         codec: null,
@@ -224,6 +290,8 @@ async function resolveENS(name) {
 }
 
 
+
+
 const dnsLinkJS = require('@dnslink/js')
 const { wellknown } = require('dns-query')
 
@@ -268,56 +336,71 @@ const ipnsCache = new Cache({
     expiry: 1000 * 60 * 60 // 1hr
 })
 
-async function resolveIPNS(ipfsNodeApiUrl, ipnsPath) {
+const resolveIpnsLink = async ({ ipfsNodeApiUrl, path }) => {
+    const baseUrl = `${ipfsNodeApiUrl}/api/v0/resolve`
+    const params = new URLSearchParams({
+        arg: path,
+        recursive: true
+    })
+    const url = baseUrl + '?' + params.toString()
+    // console.debug(url)
+    
+    // TODO: rewrite using `http` so it uses http.Agent and connection keepalive/pooling.
+    const res = await fetch(url, {
+        method: 'POST',
+    })
+    const data = await res.json()
+
+    if (res.status != 200) {
+        console.debug(data)
+
+        if (data.Message.includes("no link named")) {
+            console.debug("No link under IPNS path.")
+            return null
+        } else {
+            throw new Error("Error resolving IPNS path: " + JSON.stringify(data))
+        }
+    }
+
+    return data.Path
+}
+
+const IPNS_RESOLVER_TIMEOUT = 1000 * 15
+
+async function _resolveIPNS(ipfsNodeApiUrl, ipnsPath) {
     // Check cache.
     let cached = ipnsCache.get(ipnsPath)
-    if (cached) return cached
+    if (cached) {
+        // telemetry.log('local-gateway', 'resolve-ipns', {
+        //     ipnsNode: ipfsNodeApiUrl,
+        //     path: ipnsPath,
+        //     timeToResolve: 0,
+        // })
+        return cached
+    }
 
     try {
-        const resolveIpnsLink = async ({ path }) => {
-            const baseUrl = `${ipfsNodeApiUrl}/api/v0/resolve`
-            const params = new URLSearchParams({
-                arg: path,
-                recursive: true
-            })
-            const url = baseUrl + '?' + params.toString()
-            
-            console.debug(url)
+        const timer_ipns = new PerfTimer(`resolveIPNSLink(${ipnsPath})`)
 
-            const res = await fetch(url, {
-                method: 'POST',
-            })
-
-            // if(res.status !== 200) {
-            //     console.error("Error resolving IPNS path: " + res.statusText)
-            // }
-
-            const data = await res.json()
-
-            if(res.status != 200) {
-                console.debug(data)
-
-                if (data.Message.includes("no link named")) {
-                    console.debug("No link under IPNS path.")
-                    return null
-                } else {
-                    throw new Error("Error resolving IPNS path: " + JSON.stringify(data))
-                }
-            }
-
-            return data.Path
-        }
-
-        // Race the two.
+        // Resolve with timeout.
         const ipfsPathRoot = await Promise.race([
-            resolveIpnsLink({ path: ipnsPath }),
+            resolveIpnsLink({ ipfsNodeApiUrl, path: ipnsPath })
             
-            new Promise((resolve, reject) => {
-                setTimeout(() => {
-                    reject(new Error("Timed out resolving IPNS path."))
-                }, 1000 * 15)
-            })
+            // ,new Promise((resolve, reject) => {
+            //     setTimeout(() => {
+            //         reject(new IPNSTimeoutError("Timed out resolving IPNS path."))
+            //     }, IPNS_RESOLVER_TIMEOUT)
+            // })
         ])
+
+        timer_ipns.end()
+
+        // telemetry.log('local-gateway', 'resolve-ipns', {
+        //     ipnsNode: ipfsNodeApiUrl,
+        //     path: ipnsPath,
+        //     timeToResolve: timer_ipns.elapsed,
+        //     timeout: false
+        // })
 
         if(!ipfsPathRoot) {
             return null
@@ -334,7 +417,17 @@ async function resolveIPNS(ipfsNodeApiUrl, ipnsPath) {
         // Return the IPFS root path (/ipfs/{cid}/).
         return value
     } catch(err) {
-        console.log(err)
+        console.error(err)
+
+        if(err instanceof IPNSTimeoutError) {
+            // telemetry.log('local-gateway', 'resolve-ipns', {
+            //     ipnsNode: ipfsNodeApiUrl,
+            //     path: ipnsPath,
+            //     timeToResolve: IPNS_RESOLVER_TIMEOUT,
+            //     timeout: true
+            // })
+        }
+
         throw err
     }
 }
