@@ -1,6 +1,6 @@
 {
   "name": "@dappnet/desktop-app",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "The Dappnet desktop client.",
   "main": "build/src/index.js",
   "scripts": {

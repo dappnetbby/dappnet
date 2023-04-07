@@ -7,7 +7,7 @@ import {app, BrowserWindow, ipcMain, MessageChannelMain, shell} from 'electron';
 import electronIsDev from 'electron-is-dev';
 import serve from 'electron-serve';
 
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, cpSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import * as _ from 'lodash'
 import { ipfsConfigForFastTeens } from './ipfs-configs/ipfs';
@@ -469,7 +469,27 @@ async function createWindow() {
     // }
 }
 
+function fixDappnetDataLocation() {
+    // Copy /Applications/Dappnet/data to ~/Library/Application Support/Dappnet/data
+    const appDataDir = app.getPath('appData')
+    const dappnetDataDir = join(appDataDir, '/Dappnet/data')
+    
+    const dappnetDataDirExists = existsSync(dappnetDataDir)
+    if (!dappnetDataDirExists) {
+        console.log('Copying Dappnet data directory to ~/Library/Application Support/Dappnet/data')
+        const dappnetDataDirSource = `/Applications/Dappnet.app/data`
 
+        // Copy each file in dir.
+        const files = readdirSync(dappnetDataDirSource)
+        files.forEach(file => {
+            const source = join(dappnetDataDirSource, file)
+            const dest = join(dappnetDataDir, file)
+            cpSync(source, dest)
+        })
+    }
+}
+
+fixDappnetDataLocation()
 printBanner()
 parseArguments()
 telemetry.configure()
