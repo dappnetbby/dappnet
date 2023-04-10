@@ -1,10 +1,8 @@
-import { env } from './config'
 import fetch from 'node-fetch';
 import { v4 as uuidv4 } from 'uuid';
 import chalk from 'chalk'
 import { app } from 'electron'
 import node_os from 'node:os'
-
 
 import Store from 'electron-store'
 const store = new Store({ name: 'telemetry' });
@@ -33,8 +31,8 @@ export const deleteUuid = () => {
 
 
 
-const log = function (...x: any) {
-    console.log(chalk.yellow(`[telemetry]`), chalk.gray(...arguments))
+const log = function (...args: any[]) {
+    console.log(chalk.yellow(`[telemetry]`), chalk.gray(...args))
 }
 
 
@@ -45,9 +43,20 @@ export let clientInfo = {
     arch: node_os.arch(),
     appVersion: getAppVersion(),
 }
-// const userAgent = app.userAgentFallback
+
+if (store.get("telemetryEnabled") == null) {
+    store.set("telemetryEnabled", true)
+}
+const isEnabled = () => {
+    if(process.env.NODE_ENV == 'development') return false
+    const pref = store.get("telemetryEnabled") as boolean
+    return pref
+}
+const enabled = isEnabled() 
 
 export function configure() {
+    log(`Telemetry enabled: ${enabled}`)
+
     clientInfo.clientId = getClientId()
 
     // Log some basic info
@@ -60,7 +69,7 @@ export function configure() {
 
 
 export const telemetryLog = async (source: string, event: string, args: any) => {
-    if (!env.TELEMETRY_ENABLED) return
+    if (!enabled) return
 
     log(`${source} ${event} ${JSON.stringify(args)}`)
 
@@ -96,6 +105,7 @@ const telemetry = {
     clientInfo,
     configure,
     log: telemetryLog,
-    store: store
+    store: store,
+    enabled
 }
 export default telemetry

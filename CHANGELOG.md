@@ -3,6 +3,8 @@
  * Improve gateway/proxy performance.
  * IPFS monitoring stats - # seeders etc.
 
+## Releases.
+
 ## 1.7.0
 
  * Chrome extension now reports live connection to Dappnet app.
