@@ -10,6 +10,7 @@ set -ex
 
 # Get the data directory from the first argument.
 DATA_DIR=$1
+OVERWRITE_DATA=$2
 
 # Set the default for DATA_DIR to be "data/"
 if [ -z "$DATA_DIR" ]; then
@@ -20,9 +21,14 @@ cd $DATA_DIR
 
 # Check if ca.key exists, if so, confirm delete
 if [ -f "ca.crt" ] || [ -f "ca.key" ]; then
-    echo -e "\e[41mCertificate Authority files already exist!\e[49m"
-    exit 0
-    
+
+    if [ "$OVERWRITE_DATA" == "overwrite" ]; then
+        rm ca.key ca.pubkey ca.crt
+    else
+        echo "Certificate Authority files already exist!"
+        exit 0
+    fi
+
     # # confirm delete
     # read -p "Do you want to delete them? [y/N] " -n 1 -r
     # echo

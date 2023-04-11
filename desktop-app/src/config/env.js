@@ -4,13 +4,10 @@ let {
     DEV_IPFS,
     DEV_UI,
     DEV_GATEWAY,
-    OPEN_IN_DEFAULT_BROWSER
 } = process.env
 
-// Misc.
-let TELEMETRY_ENABLED = true
-
 // Production mode.
+// Sanity-check.
 if (process.env.NODE_ENV == 'production') {
     DEV_IPFS = false
     DEV_UI = false
@@ -24,9 +21,6 @@ const env = {
     DEV_UI,
     // Disable to start the embedded gateway.
     DEV_GATEWAY,
-    // Open links in the default browser instead of the embedded browser.
-    OPEN_IN_DEFAULT_BROWSER,
-    TELEMETRY_ENABLED
 }
 
 

@@ -3,7 +3,7 @@ sourceMap.install();
 import * as path from 'node:path';
 import {spawn, spawnSync} from 'node:child_process';
 
-import {app, BrowserWindow, ipcMain, MessageChannelMain, shell} from 'electron';
+import {app, BrowserWindow, ipcMain, Menu, MessageChannelMain, shell} from 'electron';
 import electronIsDev from 'electron-is-dev';
 import serve from 'electron-serve';
 
@@ -24,8 +24,11 @@ import {
 } from "node:worker_threads"
 
 const { featureFlags, env } = require("./config")
-import telemetry from './telemetry'
 import { ServiceLoggerStream } from './utils';
+
+import telemetry from './telemetry'
+telemetry.configure()
+import './menu'
 
 
 // 
@@ -422,22 +425,24 @@ async function createWindow() {
         const openInSystemBrowser = (url) => {
             console.log(url);
 
-            // Open in the default browser.
-            if (env.OPEN_IN_DEFAULT_BROWSER) {
+            const OPEN_IN_DEFAULT_BROWSER = true
+
+            if (OPEN_IN_DEFAULT_BROWSER) {
+                // Open in the default browser.
                 shell.openExternal(url);
                 return
+            } else {
+                // Open in Chrome.
+                // By using -a, the Chrome logo does not pop up in the dock.
+                const application = 'open'
+                const args = ['-a', "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", url]
+                const options = {
+                    detached: true,
+                    stdio: 'ignore'
+                }
+                const child = spawn(application, args, options)
+                child.unref()
             }
-
-            // Open in Chrome.
-            // By using -a, the Chrome logo does not pop up in the dock.
-            const application = 'open'
-            const args = ['-a', "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", url]
-            const options = {
-                detached: true,
-                stdio: 'ignore'
-            }
-            const child = spawn(application, args, options)
-            child.unref()
         }
         mainWindow.webContents.setWindowOpenHandler(({ url }) => {
             openInSystemBrowser(url)
@@ -492,7 +497,6 @@ function fixDappnetDataLocation() {
 fixDappnetDataLocation()
 printBanner()
 parseArguments()
-telemetry.configure()
 configureAutomaticUpdates()
 configureApp()
 serveUI()

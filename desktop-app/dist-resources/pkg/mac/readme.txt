@@ -1,0 +1,1 @@
+entitlements.mac.plist is a set of entitlements that are probably required in order for macOS signing+notarization to succeed. Found from an electron-builder gh issue.
