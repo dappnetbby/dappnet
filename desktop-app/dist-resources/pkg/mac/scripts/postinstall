@@ -47,7 +47,7 @@ echo Creating CA...
 
 # Create the new CA.
 cd $DAPPNET_APP_PATH/Contents/Resources/app.asar.unpacked/node_modules/@dappnet/local-gateway/dappnet-ca/
-./create-ca.sh $DAPPNET_DATA_DIR
+./create-ca.sh $DAPPNET_DATA_DIR overwrite
 
 
 # 

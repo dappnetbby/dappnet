@@ -425,22 +425,24 @@ async function createWindow() {
         const openInSystemBrowser = (url) => {
             console.log(url);
 
-            // Open in the default browser.
-            if (env.OPEN_IN_DEFAULT_BROWSER) {
+            const OPEN_IN_DEFAULT_BROWSER = true
+
+            if (OPEN_IN_DEFAULT_BROWSER) {
+                // Open in the default browser.
                 shell.openExternal(url);
                 return
+            } else {
+                // Open in Chrome.
+                // By using -a, the Chrome logo does not pop up in the dock.
+                const application = 'open'
+                const args = ['-a', "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", url]
+                const options = {
+                    detached: true,
+                    stdio: 'ignore'
+                }
+                const child = spawn(application, args, options)
+                child.unref()
             }
-
-            // Open in Chrome.
-            // By using -a, the Chrome logo does not pop up in the dock.
-            const application = 'open'
-            const args = ['-a', "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", url]
-            const options = {
-                detached: true,
-                stdio: 'ignore'
-            }
-            const child = spawn(application, args, options)
-            child.unref()
         }
         mainWindow.webContents.setWindowOpenHandler(({ url }) => {
             openInSystemBrowser(url)

@@ -26,6 +26,24 @@ const template = [
             isMac ? { role: 'close' } : { role: 'quit' }
         ]
     },
+
+    // {
+    //     label: 'Browser',
+    //     submenu: [
+    //         {
+    //             // a simple checkbox item to enable/disable telemetry.
+    //             label: 'Chrome',
+    //             type: 'checkbox',
+    //             checked: telemetry.enabled,
+    //             click: (menuItem: any, browserWindow: any, event: any) => {
+    //                 const { checked: enabled } = menuItem
+    //                 telemetry.log('desktop-app', 'telemetry-setting', { enabled })
+    //                 telemetry.store.set("telemetryEnabled", enabled)
+    //             }
+    //         }
+    //     ]
+    // },
+
     {
         label: 'Options',
         submenu: [

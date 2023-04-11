@@ -4,7 +4,6 @@ let {
     DEV_IPFS,
     DEV_UI,
     DEV_GATEWAY,
-    OPEN_IN_DEFAULT_BROWSER
 } = process.env
 
 // Production mode.
@@ -22,8 +21,6 @@ const env = {
     DEV_UI,
     // Disable to start the embedded gateway.
     DEV_GATEWAY,
-    // Open links in the default browser instead of the embedded browser.
-    OPEN_IN_DEFAULT_BROWSER,
 }
 
 

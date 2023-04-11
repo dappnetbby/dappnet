@@ -46,3 +46,4 @@ iterations and things I had to learn:
 - randomly fixing things that have changeed since 4mo ago - uniswap, ens
 - realising that ipfs is a resource hog. reaching out to go-ipfs maintainers, getting the `lowpower` config in.
 - submitting chrome extension to webstore. realise webstore doesn't allow manifest v2, only manifest v3. saeta contributing open-source code. resizing screenshots.
+- random optimizations to workflow - modifying update server to auto-redirect to latest .pkg, docs up-to-date

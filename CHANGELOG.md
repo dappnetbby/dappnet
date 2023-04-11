@@ -5,6 +5,11 @@
 
 ## Releases.
 
+## 1.7.1
+
+ * Fix: open links in default internet browser. Note: users are using the `chrome-0.2.0` extension with Brave! `0.3.0` will not work with Brave. https://github.com/liamzebedee/dappnet/issues/30
+ * Fix: notarize macOS .pkg installer. https://github.com/liamzebedee/dappnet/issues/32
+
 ## 1.7.0
 
  * Chrome extension now reports live connection to Dappnet app.
