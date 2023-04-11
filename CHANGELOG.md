@@ -19,15 +19,9 @@
 
 ## 1.6.0
 
-nada.
-
-## 1.5.0
-
  - IPFS links in-browser.
 
-## Releases.
-
-### 1.6.0.
+## 1.5.0
 
  * **Massive performance improvements**.
    * Moved proxy and gateway into their own separate background processes.
