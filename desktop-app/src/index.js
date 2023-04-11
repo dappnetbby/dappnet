@@ -3,7 +3,7 @@ sourceMap.install();
 import * as path from 'node:path';
 import {spawn, spawnSync} from 'node:child_process';
 
-import {app, BrowserWindow, ipcMain, Menu, MessageChannelMain, shell} from 'electron';
+import {app, BrowserWindow, ipcMain, Menu, MessageChannelMain, shell, dialog} from 'electron';
 import electronIsDev from 'electron-is-dev';
 import serve from 'electron-serve';
 
@@ -17,6 +17,7 @@ import { app } from 'electron'
 import { execPath } from 'node:process';
 import chalk from 'chalk'
 import { fork } from 'child_process'
+import net from 'node:net';
 
 
 import {
@@ -171,6 +172,27 @@ function parseArguments() {
 //
 // Configure app.
 //
+
+function checkPortInUse(port) {
+    return new Promise((resolve, reject) => {
+        const server = net.createServer()
+
+        server.once('error', (err) => {
+            if (err.code === 'EADDRINUSE') {
+                resolve(true)
+            } else {
+                reject(err)
+            }
+        })
+
+        server.once('listening', () => {
+            server.close()
+            resolve(false)
+        })
+
+        server.listen(port)
+    })
+}
 
 function configureApp() {
     app.setLoginItemSettings({
@@ -506,7 +528,21 @@ if (featureFlags.EMBEDDED_WALLET) {
     startWallet()
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+    // Check if Dappnet is already open, by checking the local-gateway port.
+    const dappnetAlreadyOpen = await checkPortInUse(10424)
+    if (dappnetAlreadyOpen) {
+        dialog.showMessageBoxSync(
+            null,
+            {
+                message: "Dappnet client seems to be already running. Please close the other instance before starting a new one.",
+                type: 'info',
+            }
+        )
+        process.exit(1)
+        return
+    }
+
     // setupExtension()
     createWindow()
 
