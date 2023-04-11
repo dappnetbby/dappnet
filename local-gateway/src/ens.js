@@ -383,15 +383,16 @@ async function _resolveIPNS(ipfsNodeApiUrl, ipnsPath) {
         const timer_ipns = new PerfTimer(`resolveIPNSLink(${ipnsPath})`)
 
         // Resolve with timeout.
-        const ipfsPathRoot = await Promise.race([
-            resolveIpnsLink({ ipfsNodeApiUrl, path: ipnsPath })
+        // const ipfsPathRoot = await Promise.race([
+        //     resolveIpnsLink({ ipfsNodeApiUrl, path: ipnsPath })
             
-            // ,new Promise((resolve, reject) => {
-            //     setTimeout(() => {
-            //         reject(new IPNSTimeoutError("Timed out resolving IPNS path."))
-            //     }, IPNS_RESOLVER_TIMEOUT)
-            // })
-        ])
+        //     // ,new Promise((resolve, reject) => {
+        //     //     setTimeout(() => {
+        //     //         reject(new IPNSTimeoutError("Timed out resolving IPNS path."))
+        //     //     }, IPNS_RESOLVER_TIMEOUT)
+        //     // })
+        // ])
+        const ipfsPathRoot = await resolveIpnsLink({ ipfsNodeApiUrl, path: ipnsPath })
 
         timer_ipns.end()
 
