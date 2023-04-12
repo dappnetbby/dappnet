@@ -1,4 +1,5 @@
 const contentHash = require('content-hash')
+const PeerId = require('peer-id')
 // const Multihash = require('@liamzebedee/multihashes')
 
 const { namehash } = require("@ethersproject/hash")
@@ -15,6 +16,10 @@ const {
     IPFSTimeoutError,
     IPNSTimeoutError
 } = require('./errors')
+
+const { CID } = require('multiformats/cid')
+const base16 = require('multiformats/bases/base16')
+
 
 // Provider setup.
 const provider = new ethers.providers.CloudflareProvider()
@@ -132,19 +137,21 @@ const {
 // 
 let _promiseMutex = {}
 
-const resolveENS = async (name) => {
-    let key = `resolveENS-${name}`
-    if (_promiseMutex[key]) return _promiseMutex[key]
-    _promiseMutex[key] = _resolveENS(name)
-    return _promiseMutex[key]
-}
+const resolveENS = _resolveENS
+// const resolveENS = async (name) => {
+//     let key = `resolveENS-${name}`
+//     if (_promiseMutex[key]) return _promiseMutex[key]
+//     _promiseMutex[key] = _resolveENS(name)
+//     return _promiseMutex[key]
+// }
 
-const resolveIPNS = async (ipfsNodeApiUrl, ipnsPath) => {
-    let key = `resolveIPNS-${ipnsPath}`
-    if (_promiseMutex[key]) return _promiseMutex[key]
-    _promiseMutex[key] = _resolveIPNS(ipfsNodeApiUrl, ipnsPath)
-    return _promiseMutex[key]
-}
+const resolveIPNS = _resolveIPNS
+// const resolveIPNS = async (ipfsNodeApiUrl, ipnsPath) => {
+//     let key = `resolveIPNS-${ipnsPath}`
+//     if (_promiseMutex[key]) return _promiseMutex[key]
+//     _promiseMutex[key] = _resolveIPNS(ipfsNodeApiUrl, ipnsPath)
+//     return _promiseMutex[key]
+// }
 
 
 
@@ -230,8 +237,25 @@ async function _resolveENS(name) {
     // const multihash = Multihash.decode(uint8)
     // console.log(multihash)
     // return
-    const hash = contentHash.decode(contentHashHex)
+    const hashRaw = contentHash.decode(contentHashHex)
     const codec = contentHash.getCodec(contentHashHex)
+    console.log(codec)
+    
+    // Hash is either an IPFS hash or an IPNS hash (a PeerId).
+    let hash
+    
+    // NOTE: Upgrade to CIDv1 in the future.
+    // if (codec == 'ipns-ns') {
+    //     const PeerId = require('peer-id')
+    //     const cidv1 = PeerId.createFromB58String(hashRaw).toString()
+    //     console.log(cidv1)
+    //     hash = cidv1
+    // } else {
+    //     hash = hashRaw
+    // }
+
+    hash = hashRaw
+
     let dnsLinkName
 
     // 1. ipns cidv1 libp2p-key identity hash

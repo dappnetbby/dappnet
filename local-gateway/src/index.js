@@ -153,6 +153,7 @@ async function getIpns(req, res, next) {
         // Construct an /ipns/ path and then forward it for resolution.
         const pubkeyHash = req.ensData.hash
         const ipnsPath = `/ipns/${pubkeyHash}${req.path || '/'}`
+
         ipfsPath = await resolveIPNS(IPFS_NODE_API_URL, ipnsPath)
         if (ipfsPath === null) {
             throw new Error("IPNS path not found:", ipnsPath)
@@ -165,8 +166,18 @@ async function getIpns(req, res, next) {
         res.setHeader('X-Dappnet-IPFS', `${cid}`);
 
         req.ipnsData = {
+            ipnsPath,
             ipfsPath
         }
+
+        // const gateway8080Path = `${ipnsPath}`
+        // console.log(gateway8080Path)
+        // try {
+        //     await resolveIpfs(req, gateway8080Path, res)
+        //     return
+        // } catch (err) {
+        //     return next(err)
+        // }
     }
 
     // 2) Proxy the request for a CID to the gateway.
@@ -178,6 +189,8 @@ async function getIpns(req, res, next) {
     }
 }
 
+const mime = require('mime-types')
+const { extname } = require('path')
 
 const resolveIpfs = async (req, ipfsPath, res) => {
     const gatewayUrl = `${IPFS_HTTP_GATEWAY}${ipfsPath}`
@@ -187,9 +200,34 @@ const resolveIpfs = async (req, ipfsPath, res) => {
     log.info(chalk.yellow('resolveIpfs'), domain, gatewayUrl)
 
     const timer_ipfs = new PerfTimer(`resolveIpfs(${gatewayUrl})`)
+    console.log(ipfsPath)
+    
+    // Perform MIME type sniffing.
+    // NOTE: this is obviously ugly, and not robust.
+    // It is to workaround the performance of the IPFS gateway.
+    // There are two ways to resolve IPNS content from our local gateway:
+    // 1. Use the IPNS endpoint - /ipns/12123213123/, which will allow us to lookup subpaths like /ipns/12123213123/styles.css, 
+    //    and automatically perform the MIME sniffing for Content-Type.
+    // 2. Use the IPFS endpoint - /ipfs/12312312312/.
+    // The latency of (1) was unacceptable, and deserves further investigation. However since we're near launch, and this is an approximate solution,
+    // this will do for now.
+    const strippedPath = req.path.split('?')[0]
+    const ext = extname(strippedPath)
+    const contentType = mime.lookup(ext) || ''
 
-    http.get(gatewayUrl, async (gatewayRes) => {
+    req.headers['host'] = ''
+    const params = {
+        hostname: '127.0.0.1',
+        port: 8080,
+        path: ipfsPath,
+        headers: req.headers,
+        method: 'GET'
+    }
+
+    http.get(params, async (gatewayRes) => {
         // Transfer the headers from the response.
+        gatewayRes.headers['cache-control'] = 'max-age=300, must-revalidate'
+        gatewayRes.headers['content-type'] = contentType
         res.writeHead(gatewayRes.statusCode, gatewayRes.headers);
 
         // Stream the response.

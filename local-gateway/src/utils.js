@@ -5,6 +5,7 @@ class PerfTimer {
     constructor(label) {
         this.label = label
         this.t1 = now()
+        console.log(`[timer] ${this.label} [start]`)
     }
 
     end() {
