@@ -47,3 +47,7 @@ iterations and things I had to learn:
 - realising that ipfs is a resource hog. reaching out to go-ipfs maintainers, getting the `lowpower` config in.
 - submitting chrome extension to webstore. realise webstore doesn't allow manifest v2, only manifest v3. saeta contributing open-source code. resizing screenshots.
 - random optimizations to workflow - modifying update server to auto-redirect to latest .pkg, docs up-to-date
+- adopting an open source model. moving all repos to dappnetbby. redesigning the gh logo so it looks nice with a subtle gray bg.
+- figuring out how to balance (launch thread, launch mirror article, launch trailer, and docs) so it's not too informationally dense at each step (or repeating itself), but leads people on in a way that's digestible
+- designing images for mirror post. uploading art to the doc site, so it's more vibey and less "this is information reaaaad me"
+- adding more context to the launch site, like previous approaches (zeronet). counterbalancing self-aggrandization bs with contextualisation and history. [library ethos](https://www.visakanv.com/blog/libraries/)
