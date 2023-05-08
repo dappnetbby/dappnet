@@ -23,7 +23,7 @@ npm run start
 ## Testing the gateway locally.
 
 ```
-curl --header "Host: kwenta.eth" http://127.0.0.1:10422 & curl --header "Host: ens.eth" http://127.0.0.1:10422 & curl --header "Host: tornadocashcommunity.eth" http://127.0.0.1:10422
+curl --header "Host: kwenta.eth" http://127.0.0.1:10422 & curl --header "Host: ens.eth" http://127.0.0.1:10422 & curl --header "Host: curve.eth" http://127.0.0.1:10422
 ```
 
 
