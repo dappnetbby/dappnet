@@ -5,6 +5,10 @@
 
 ## Releases.
 
+## 1.7.2
+
+ * Hacks: send headers to IPFS gateway, MIME type sniffing so styling shows up properly on `planetable.eth`.
+
 ## 1.7.1
 
  * Fix: open links in default internet browser. Note: users are using the `chrome-0.2.0` extension with Brave! `0.3.0` will not work with Brave. https://github.com/liamzebedee/dappnet/issues/30

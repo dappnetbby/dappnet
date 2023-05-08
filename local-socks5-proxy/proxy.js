@@ -64,7 +64,7 @@ server = socks.createServer(function (socket, port, address, proxy_ready) {
         });
         setTimeout(function () {
           proxy.resume();
-        }, 100);
+        }, 1);
       }
     } catch (err) {
     }
@@ -81,7 +81,7 @@ server = socks.createServer(function (socket, port, address, proxy_ready) {
         });
         setTimeout(function () {
           socket.resume();
-        }, 100);
+        }, 1);
       }
     } catch (err) {
     }
