@@ -7,7 +7,7 @@
 ## Notarizing and signing.
 
 ```sh
-(base) ➜  desktop-app git:(dev) ✗ xcrun notarytool submit dist/Dappnet-1.7.0-arm64.pkg --apple-id liamzebedee@yahoo.com.au --password "kbzw-prkj-lfoj-smdj" --team-id 2S6NXP6BKG --wait
+(base) ➜  desktop-app git:(dev) ✗ xcrun notarytool submit dist/Dappnet-1.7.0-arm64.pkg --apple-id liamzebedee@yahoo.com.au --password "XXXX-XXXX-XXXX-XXXX" --team-id 2S6NXP6BKG --wait
 Conducting pre-submission checks for Dappnet-1.7.0-arm64.pkg and initiating connection to the Apple notary service...
 Submission ID received
   id: 53417843-31c2-46be-8cc8-0ea7f3d621b8
