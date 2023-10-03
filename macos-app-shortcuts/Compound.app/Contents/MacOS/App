@@ -1,0 +1,4 @@
+#!/bin/bash
+OPEN_DAPP=Compound,/Users/liamz/Documents/Projects/dappnet/macos-app-shortcuts/compound.png,https://compoundfinance.eth open -a /Users/liamz/Documents/Projects/dappnet/desktop-app/dist/mac/Dappnet.app/Contents/MacOS/Dappnet
+
+
