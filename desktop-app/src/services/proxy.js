@@ -4,26 +4,14 @@ import * as sourceMap from 'source-map-support';
 sourceMap.install();
 import chalk from 'chalk'
 import { runBinary } from '../utils'
-
-const startLocalSocksProxyRust = ({ appPath }) => {
-    // cargo run -- --no-auth --port 6801
-    const appPathUnpacked = appPath.replace('app.asar', 'app.asar.unpacked')
-    const binaryPath = path.join(appPathUnpacked, `/vendor/local-proxy/merino`)
-    runBinary(binaryPath, `--no-auth --port 6801`, {}, 'socks5-proxy')
-}
+import { spawn, spawnSync } from 'node:child_process';
 
 async function main({ appPath, appDataPath }) {
-    // Launch SOCKS5 proxy server.
-    // There are two approaches:
-    // - Rust
-    // - JS
-    // The Rust server seems to underperform on concurrent connections ironnically.
-    // The JS server is more performant.
+    const appPathUnpacked = appPath.replace('app.asar', 'app.asar.unpacked')
 
-    // startLocalSocksProxyRust({ appPath })
-    LocalSocksProxy.start()
-    
-    // TODO kill on exit.
+    // TODO check GOOS-GOARCH, run macos-arm64 if possible.
+    const binaryPath = path.join(appPathUnpacked, `/bin/socks5-proxy`)
+    runBinary(binaryPath, '', {}, 'socks5-proxy')
 }
 
 const { APP_PATH, APP_DATA_PATH } = process.env

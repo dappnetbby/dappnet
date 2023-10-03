@@ -9,6 +9,7 @@ protocols:
 compression: normal
 asarUnpack:
  - vendor/
+ - bin/
  - node_modules/@dappnet/local-gateway/
 
 afterSign: scripts/mac/notarize.js
@@ -28,6 +29,7 @@ files:
   - ui/out/
   - node_modules/
   - vendor/
+  - bin/
 
   # ${platform} and ${arch} don't work here.
   # - vendor/ipfs/go-ipfs_v0.13.0_${platform}-${arch}/ipfs
@@ -68,7 +70,8 @@ mac:
   # binaries Array<String> | “undefined” - Paths of any extra binaries that need to be signed.
   binaries:
    - vendor/ipfs/kubo_v0.18.1_darwin-amd64/ipfs
-   - vendor/local-proxy/merino
+   - bin/local-gateway
+   - bin/socks5-proxy
   
   category: public.app-category.tools
 

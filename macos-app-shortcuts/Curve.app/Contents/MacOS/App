@@ -1,0 +1,2 @@
+#!/bin/bash
+OPEN_DAPP=Curve,/Users/liamz/Documents/Projects/dappnet/macos-app-shortcuts/curve.png,https://curve.eth open -a /Users/liamz/Documents/Projects/dappnet/desktop-app/dist/mac/Dappnet.app/Contents/MacOS/Dappnet

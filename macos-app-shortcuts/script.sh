@@ -1,0 +1,2 @@
+#!/bin/bash
+OPEN_DAPP="Uniswap,/Users/liamz/Documents/Projects/dappnet/macos-app-shortcuts/MyIcon.icns,https://vitalik.eth/" open -a /Users/liamz/Documents/Projects/dappnet/desktop-app/dist/mac/Dappnet.app/Contents/MacOS/Dappnet

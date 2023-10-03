@@ -74,10 +74,10 @@ function configureAutomaticUpdates() {
 
     console.log(`updateServerUrl: ${updateServerUrl}`)
 
-    autoUpdater.setFeedURL({
-        // url: "file:///Users/liamz/Documents/Projects/dappnet/desktop-app/test/auto-update/update.json"
-        url: updateServerUrl
-    })
+    // autoUpdater.setFeedURL({
+    //     // url: "file:///Users/liamz/Documents/Projects/dappnet/desktop-app/test/auto-update/update.json"
+    //     url: updateServerUrl
+    // })
     
     if (app.isPackaged) {
         setInterval(() => {
@@ -340,24 +340,53 @@ function fixInjectedEthereumObject(window) {
 async function createWindow() {
     // const appIcon = new Tray(__dirname + '/../build/icon.png')
     // const icon = nativeImage.createFromPath(__dirname + '/../build/icon.icns')
-    const mainWindow = new BrowserWindow({
-        width: 800,
-        height: 600,
-        title: 'Dappnet',
-        // icon,
-        icon: __dirname + '/../build/icon.icns',
-        focusable: true,
+    let mainWindow
+    if (process.env.OPEN_DAPP) {
+        console.log(app.dock)
+        const [title,icon,uri] = process.env.OPEN_DAPP.split(',')
+        console.log(`Custom dapp:`)
+        console.log(`Title: ${title}`)
+        console.log(`Icon: ${icon}`)
+        console.log(`URI: ${uri}`)
 
-        webPreferences: {
-            nodeIntegrationInWorker: true,
-            // https://stackoverflow.com/questions/58653223/why-does-preload-js-return-error-module-not-found
-            preload: path.join(__dirname, 'preload.js'),
-        }
+        mainWindow = new BrowserWindow({
+            width: 800,
+            height: 600,
+            title,
+            focusable: true,
 
-        // frame: false, titleBarStyle: 'hidden',
-        // titleBarOverlay: true
-        // movable: true,
-    });
+            webPreferences: {
+                nodeIntegrationInWorker: true,
+                // https://stackoverflow.com/questions/58653223/why-does-preload-js-return-error-module-not-found
+                preload: path.join(__dirname, 'preload.js'),
+            }
+
+            // frame: false, titleBarStyle: 'hidden',
+            // titleBarOverlay: true
+            // movable: true,
+        });
+        
+        app.dock.setIcon(icon)
+    } else {
+        mainWindow = new BrowserWindow({
+            width: 800,
+            height: 600,
+            title: 'Dappnet',
+            // icon,
+            icon: __dirname + '/../build/icon.icns',
+            focusable: true,
+
+            webPreferences: {
+                nodeIntegrationInWorker: true,
+                // https://stackoverflow.com/questions/58653223/why-does-preload-js-return-error-module-not-found
+                preload: path.join(__dirname, 'preload.js'),
+            }
+
+            // frame: false, titleBarStyle: 'hidden',
+            // titleBarOverlay: true
+            // movable: true,
+        });
+    }
 
     // Detect last exit and send this event to the server.
     const lastExit = telemetry.store.get("lastExit")
@@ -379,7 +408,7 @@ async function createWindow() {
         mainWindow.setTitle(APP_NAME + '- loading...');    
     });
     mainWindow.webContents.on('did-stop-loading', () => {
-        mainWindow.setTitle(APP_NAME);
+        // mainWindow.setTitle(APP_NAME);
         mainWindow.setProgressBar(-1);
     });
 
@@ -405,7 +434,7 @@ async function createWindow() {
 
             // Open in a new window
             // Execute this JS in the mainWindow, so we don't have to rewrite all of the settings.
-            const newWindow = await mainWindow.webContents.executeJavaScript(`window.open('${httpsUrl}')`)
+            // const newWindow = await mainWindow.webContents.executeJavaScript(`window.open('${httpsUrl}')`)
         } catch (err) {
             console.error(err)
         }
@@ -484,6 +513,10 @@ async function createWindow() {
         await mainWindow.loadURL('http://localhost:3000');
         // await mainWindow.loadURL('app://-');
         // await mainWindow.loadURL('https://app.uniswap.org');
+    } else if (process.env.OPEN_DAPP) {
+        const [title, icon, uri] = process.env.OPEN_DAPP.split(',')
+        console.debug('[dev] loading URL - ' + uri)
+        await mainWindow.loadURL(uri)
     } else {
         // Load static assets from `serve`.
         await mainWindow.loadURL('app://-');
@@ -530,7 +563,8 @@ if (featureFlags.EMBEDDED_WALLET) {
 
 app.whenReady().then(async () => {
     // Check if Dappnet is already open, by checking the local-gateway port.
-    const dappnetAlreadyOpen = await checkPortInUse(10424)
+    // const dappnetAlreadyOpen = !process.env.DEV_GATEWAY && await checkPortInUse(10424)
+    const dappnetAlreadyOpen = false
     if (dappnetAlreadyOpen) {
         dialog.showMessageBoxSync(
             null,
