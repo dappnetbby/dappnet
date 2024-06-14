@@ -1,6 +1,6 @@
 // Feature flags.
 let featureFlags = {
-    EMBEDDED_BROWSER: false,
+    EMBEDDED_BROWSER: true,
     EMBEDDED_ETHEREUM_NODE: false,
     EMBEDDED_WALLET: false
 }
